@@ -299,7 +299,7 @@ namespace FactionColonies
 			param.filter.SetAllow(ThingCategoryDefOf.Buildings, true);
 			param.filter.SetAllow(StuffCategoryDefOf.Metallic, true);
             //Added by swatacular
-            param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("ElectronicsCat"), true);
+            param.filter.SetAllow(DefDatabase<StuffCategoryDef>.GetNamedSilentFail("ElectronicsCat"), true);
 
             //set disallow
             param.filter.SetAllow(DefDatabase<ThingDef>.GetNamedSilentFail("Teachmat"), false);
@@ -352,7 +352,7 @@ namespace FactionColonies
 					//Remove Alpha Animals skysteel
 					param.filter.SetAllow(DefDatabase<ThingDef>.GetNamedSilentFail("AA_SkySteel"), false);
                     //Added by swatacular
-                    param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("ElectronicsCat"), true);
+                    param.filter.SetAllow(DefDatabase<StuffCategoryDef>.GetNamedSilentFail("ElectronicsCat"), true);
 					param.countRange = new IntRange(1, 4*multiplier);
 					break;
 				case 6: //research
@@ -484,7 +484,7 @@ namespace FactionColonies
 					//Remove Alpha Animals skysteel
 					param.filter.SetAllow(DefDatabase<ThingDef>.GetNamedSilentFail("AA_SkySteel"), false);
                     //Added by swatacular
-                    param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("ElectronicsCat"), true);
+                    param.filter.SetAllow(DefDatabase<StuffCategoryDef>.GetNamedSilentFail("ElectronicsCat"), true);
                     param.countRange = new IntRange(1, 10);
 					break;
 				case "drugs": //drugs
