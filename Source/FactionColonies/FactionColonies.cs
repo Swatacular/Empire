@@ -338,16 +338,16 @@ namespace FactionColonies
 
 
 			//Add update letter/checker here!!
-			if (factionFC.updateVersion < 0.329)
+			if (factionFC.updateVersion < 0.333)
 			{
 				string str;
-				str = "A new update for Empire has been released!  v.0.329\n The following abbreviated changes have occurred:";
-				str += "\n\n- New Prisoner Mechanics";
-				str += "\n- View Prisoners per settlement in the settlement menu";
-				str += "\n- Sell prisoners and have the amount earned be returned in the next bill";
-				str += "\n- Send and retrieve prisoners back from the settlement";
-				str += "\n- Adjust the workload of prisoners";
-				str += "\n- Upon reaching 0 health, prisoners will die";
+				str = "A new update for Empire has been released!  v.0.333\n The following abbreviated changes have occurred:";
+				str += "\n\n- Empire is now Open-Source. Visit the discord for more information on how you can contribute to development!";
+				//str += "\n- View Prisoners per settlement in the settlement menu";
+				//str += "\n- Sell prisoners and have the amount earned be returned in the next bill";
+				//str += "\n- Send and retrieve prisoners back from the settlement";
+				//str += "\n- Adjust the workload of prisoners";
+				//str += "\n- Upon reaching 0 health, prisoners will die";
 				//str += "\n- Fixed specific animals from the Witcher Mod, Alpha Animals, Genetic Rim animals from being animal tithes";
 
 				//str += "\n- A bit more randomness added to enemy factions attacking. It is now possible for their attacking force to be 2 below or 2 above their standard attack force size. (This is before combat modifiers)";
@@ -358,7 +358,7 @@ namespace FactionColonies
 
 				str += "\n\nWant to see the full patch notes? Join us on Discord! https://discord.gg/f3zFQqA";
 
-				factionFC.updateVersion = 0.329;
+				factionFC.updateVersion = 0.333;
 				Find.LetterStack.ReceiveLetter("Empire Mod Update!", str, LetterDefOf.NewQuest);
 
 
