@@ -299,7 +299,10 @@ namespace FactionColonies
 			param.filter.SetAllow(ThingCategoryDefOf.Buildings, true);
 			param.filter.SetAllow(StuffCategoryDefOf.Metallic, true);
             //Added by swatacular
-            param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("ElectronicsCat"), true);
+            Verse.Log.Warning("==== hey there1 ====");
+            //var tcd = DefDatabase<ThingCategoryDef>.GetNamedSilentFail("ElectronicsCat");
+            //Verse.Log.Message($"generateRaidLoot - Searching for ThingCategoryDef:ElectronicsCat - found: {tcd != null}");
+            //if (tcd != null) param.filter.SetAllow(tcd, true);
 
             //set disallow
             param.filter.SetAllow(DefDatabase<ThingDef>.GetNamedSilentFail("Teachmat"), false);
@@ -352,7 +355,11 @@ namespace FactionColonies
 					//Remove Alpha Animals skysteel
 					param.filter.SetAllow(DefDatabase<ThingDef>.GetNamedSilentFail("AA_SkySteel"), false);
                     //Added by swatacular
-                    param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("ElectronicsCat"), true);
+                    Verse.Log.Warning("==== hey there2 ====");
+                    //var tcd = DefDatabase<ThingCategoryDef>.GetNamedSilentFail("ElectronicsCat");
+                    //Verse.Log.Message($"generateTithe - Searching for ThingCategoryDef:ElectronicsCat - found: {tcd != null}");
+                    //if (tcd != null) param.filter.SetAllow(tcd, true);
+
 					param.countRange = new IntRange(1, 4*multiplier);
 					break;
 				case 6: //research
@@ -484,7 +491,11 @@ namespace FactionColonies
 					//Remove Alpha Animals skysteel
 					param.filter.SetAllow(DefDatabase<ThingDef>.GetNamedSilentFail("AA_SkySteel"), false);
                     //Added by swatacular
-                    param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("ElectronicsCat"), true);
+                    Verse.Log.Warning("==== hey there3 ====");
+                    //var tcd = DefDatabase<ThingCategoryDef>.GetNamedSilentFail("ElectronicsCat");
+                    //Verse.Log.Message($"generateThing - Searching for ThingCategoryDef:ElectronicsCat - found: {tcd != null}");
+                    //if (tcd != null) param.filter.SetAllow(tcd, true);
+
                     param.countRange = new IntRange(1, 10);
 					break;
 				case "drugs": //drugs
