@@ -362,4 +362,284 @@
 			<li>1</li> <!-- Medicine -->
 		</BaseProductionMultiplicative>
 	</FactionColonies.BiomeResourceDef>
+	
+		<FactionColonies.BiomeResourceDef>
+		<defName>DesertSaltFields</defName>
+		<label>Desert Salt Fields Resources</label>
+		<canSettle>true</canSettle>
+		<BaseProductionAdditive> <!-- 0 is default -->
+			<li>.25</li> <!-- Food -->
+			<li>1</li> <!-- Weapons -->
+			<li>1</li> <!-- Apparel -->
+			<li>.25</li> <!-- Animals -->
+			<li>.25</li> <!-- Logging -->
+			<li>1.5</li> <!-- Mining -->
+			<li>1</li> <!-- Research -->
+			<li>1</li> <!-- Power -->
+			<li>1</li> <!-- Medicine -->
+		</BaseProductionAdditive>
+		<BaseProductionMultiplicative> <!-- li is default -->
+			<li>1</li> <!-- Food -->
+			<li>1</li> <!-- Weapons -->
+			<li>1</li> <!-- Apparel -->
+			<li>1</li> <!-- Animals -->
+			<li>1</li> <!-- Logging -->
+			<li>1</li> <!-- Mining -->
+			<li>1</li> <!-- Research -->
+			<li>1</li> <!-- Power -->
+			<li>1</li> <!-- Medicine -->
+		</BaseProductionMultiplicative>
+	</FactionColonies.BiomeResourceDef>
+	
+		<FactionColonies.BiomeResourceDef>
+		<defName>Grasslands</defName>
+		<label>Grasslands Resources</label>
+		<canSettle>true</canSettle>
+		<BaseProductionAdditive> <!-- 0 is default -->
+			<li>1</li> <!-- Food -->
+			<li>1.25</li> <!-- Weapons -->
+			<li>1.25</li> <!-- Apparel -->
+			<li>1</li> <!-- Animals -->
+			<li>1</li> <!-- Logging -->
+			<li>1</li> <!-- Mining -->
+			<li>1</li> <!-- Research -->
+			<li>1</li> <!-- Power -->
+			<li>1</li> <!-- Medicine -->
+		</BaseProductionAdditive>
+		<BaseProductionMultiplicative> <!-- li is default -->
+			<li>1</li> <!-- Food -->
+			<li>1</li> <!-- Weapons -->
+			<li>1</li> <!-- Apparel -->
+			<li>1</li> <!-- Animals -->
+			<li>1</li> <!-- Logging -->
+			<li>1</li> <!-- Mining -->
+			<li>1</li> <!-- Research -->
+			<li>1</li> <!-- Power -->
+			<li>1</li> <!-- Medicine -->
+		</BaseProductionMultiplicative>
+	</FactionColonies.BiomeResourceDef>
+	
+		<FactionColonies.BiomeResourceDef>
+		<defName>Oasis</defName>
+		<label>Oasis Resources</label>
+		<canSettle>true</canSettle>
+		<BaseProductionAdditive> <!-- 0 is default -->
+			<li>.75</li> <!-- Food -->
+			<li>1</li> <!-- Weapons -->
+			<li>1</li> <!-- Apparel -->
+			<li>.75</li> <!-- Animals -->
+			<li>.25</li> <!-- Logging -->
+			<li>1.25</li> <!-- Mining -->
+			<li>1</li> <!-- Research -->
+			<li>1</li> <!-- Power -->
+			<li>1</li> <!-- Medicine -->
+		</BaseProductionAdditive>
+		<BaseProductionMultiplicative> <!-- li is default -->
+			<li>1</li> <!-- Food -->
+			<li>1</li> <!-- Weapons -->
+			<li>1</li> <!-- Apparel -->
+			<li>1</li> <!-- Animals -->
+			<li>1</li> <!-- Logging -->
+			<li>1</li> <!-- Mining -->
+			<li>1</li> <!-- Research -->
+			<li>1</li> <!-- Power -->
+			<li>1</li> <!-- Medicine -->
+		</BaseProductionMultiplicative>
+	</FactionColonies.BiomeResourceDef>
+	
+		<FactionColonies.BiomeResourceDef>
+		<defName>RedwoodForest</defName>
+		<label>RedwoodForest Resources</label>
+		<canSettle>true</canSettle>
+		<BaseProductionAdditive> <!-- 0 is default -->
+			<li>1.25</li> <!-- Food -->
+			<li>1</li> <!-- Weapons -->
+			<li>1</li> <!-- Apparel -->
+			<li>1.25</li> <!-- Animals -->
+			<li>2</li> <!-- Logging -->
+			<li>.75</li> <!-- Mining -->
+			<li>1</li> <!-- Research -->
+			<li>1</li> <!-- Power -->
+			<li>1</li> <!-- Medicine -->
+		</BaseProductionAdditive>
+		<BaseProductionMultiplicative> <!-- li is default -->
+			<li>1</li> <!-- Food -->
+			<li>1</li> <!-- Weapons -->
+			<li>1</li> <!-- Apparel -->
+			<li>1</li> <!-- Animals -->
+			<li>1</li> <!-- Logging -->
+			<li>1</li> <!-- Mining -->
+			<li>1</li> <!-- Research -->
+			<li>1</li> <!-- Power -->
+			<li>1</li> <!-- Medicine -->
+		</BaseProductionMultiplicative>
+	</FactionColonies.BiomeResourceDef>
+	
+		<FactionColonies.BiomeResourceDef>
+		<defName>VolcanicFlow</defName>
+		<label>VolcanicFlow Resources</label>
+		<canSettle>true</canSettle>
+		<BaseProductionAdditive> <!-- 0 is default -->
+			<li>.25</li> <!-- Food -->
+			<li>2</li> <!-- Weapons -->
+			<li>2</li> <!-- Apparel -->
+			<li>.25</li> <!-- Animals -->
+			<li>.25</li> <!-- Logging -->
+			<li>2</li> <!-- Mining -->
+			<li>1</li> <!-- Research -->
+			<li>2</li> <!-- Power -->
+			<li>1</li> <!-- Medicine -->
+		</BaseProductionAdditive>
+		<BaseProductionMultiplicative> <!-- li is default -->
+			<li>1</li> <!-- Food -->
+			<li>1</li> <!-- Weapons -->
+			<li>1</li> <!-- Apparel -->
+			<li>1</li> <!-- Animals -->
+			<li>1</li> <!-- Logging -->
+			<li>1</li> <!-- Mining -->
+			<li>1</li> <!-- Research -->
+			<li>2</li> <!-- Power -->
+			<li>1</li> <!-- Medicine -->
+		</BaseProductionMultiplicative>
+	</FactionColonies.BiomeResourceDef>
+	
+		<FactionColonies.BiomeResourceDef>
+		<defName>Steppes</defName>
+		<label>Steppes Resources</label>
+		<canSettle>true</canSettle>
+		<BaseProductionAdditive> <!-- 0 is default -->
+			<li>.75</li> <!-- Food -->
+			<li>1.25</li> <!-- Weapons -->
+			<li>1.25</li> <!-- Apparel -->
+			<li>.75</li> <!-- Animals -->
+			<li>.5</li> <!-- Logging -->
+			<li>1.50</li> <!-- Mining -->
+			<li>1</li> <!-- Research -->
+			<li>1</li> <!-- Power -->
+			<li>1</li> <!-- Medicine -->
+		</BaseProductionAdditive>
+		<BaseProductionMultiplicative> <!-- li is default -->
+			<li>1</li> <!-- Food -->
+			<li>1</li> <!-- Weapons -->
+			<li>1</li> <!-- Apparel -->
+			<li>1</li> <!-- Animals -->
+			<li>1</li> <!-- Logging -->
+			<li>1</li> <!-- Mining -->
+			<li>1</li> <!-- Research -->
+			<li>1</li> <!-- Power -->
+			<li>1</li> <!-- Medicine -->
+		</BaseProductionMultiplicative>
+	</FactionColonies.BiomeResourceDef>
+	
+			<FactionColonies.BiomeResourceDef>
+		<defName>Savanna</defName>
+		<label>Savanna Resources</label>
+		<canSettle>true</canSettle>
+		<BaseProductionAdditive> <!-- 0 is default -->
+			<li>1.25</li> <!-- Food -->
+			<li>.75</li> <!-- Weapons -->
+			<li>.75</li> <!-- Apparel -->
+			<li>1.25</li> <!-- Animals -->
+			<li>.75</li> <!-- Logging -->
+			<li>.75</li> <!-- Mining -->
+			<li>1</li> <!-- Research -->
+			<li>1</li> <!-- Power -->
+			<li>1</li> <!-- Medicine -->
+		</BaseProductionAdditive>
+		<BaseProductionMultiplicative> <!-- li is default -->
+			<li>1</li> <!-- Food -->
+			<li>1</li> <!-- Weapons -->
+			<li>1</li> <!-- Apparel -->
+			<li>1</li> <!-- Animals -->
+			<li>1</li> <!-- Logging -->
+			<li>1</li> <!-- Mining -->
+			<li>1</li> <!-- Research -->
+			<li>1</li> <!-- Power -->
+			<li>1</li> <!-- Medicine -->
+		</BaseProductionMultiplicative>
+	</FactionColonies.BiomeResourceDef>
+	
+	<FactionColonies.BiomeResourceDef>
+		<defName>Permafrost</defName>
+		<label>Permafrost Resources</label>
+		<canSettle>true</canSettle>
+		<BaseProductionAdditive> <!-- 0 is default -->
+			<li>.75</li> <!-- Food -->
+			<li>1</li> <!-- Weapons -->
+			<li>1</li> <!-- Apparel -->
+			<li>.75</li> <!-- Animals -->
+			<li>.75</li> <!-- Logging -->
+			<li>1.25</li> <!-- Mining -->
+			<li>1</li> <!-- Research -->
+			<li>1</li> <!-- Power -->
+			<li>1</li> <!-- Medicine -->
+		</BaseProductionAdditive>
+		<BaseProductionMultiplicative> <!-- li is default -->
+			<li>1</li> <!-- Food -->
+			<li>1</li> <!-- Weapons -->
+			<li>1</li> <!-- Apparel -->
+			<li>1</li> <!-- Animals -->
+			<li>1</li> <!-- Logging -->
+			<li>1</li> <!-- Mining -->
+			<li>1</li> <!-- Research -->
+			<li>1</li> <!-- Power -->
+			<li>1</li> <!-- Medicine -->
+		</BaseProductionMultiplicative>
+	</FactionColonies.BiomeResourceDef>
+	
+			<FactionColonies.BiomeResourceDef>
+		<defName>TemperateDesert</defName>
+		<label>TemperateDesert Resources</label>
+		<canSettle>true</canSettle>
+		<BaseProductionAdditive> <!-- 0 is default -->
+			<li>.75</li> <!-- Food -->
+			<li>1.25</li> <!-- Weapons -->
+			<li>1.25</li> <!-- Apparel -->
+			<li>.75</li> <!-- Animals -->
+			<li>.50</li> <!-- Logging -->
+			<li>1.50</li> <!-- Mining -->
+			<li>1</li> <!-- Research -->
+			<li>1.5</li> <!-- Power -->
+			<li>1</li> <!-- Medicine -->
+		</BaseProductionAdditive>
+		<BaseProductionMultiplicative> <!-- li is default -->
+			<li>1</li> <!-- Food -->
+			<li>1</li> <!-- Weapons -->
+			<li>1</li> <!-- Apparel -->
+			<li>1</li> <!-- Animals -->
+			<li>1</li> <!-- Logging -->
+			<li>1</li> <!-- Mining -->
+			<li>1</li> <!-- Research -->
+			<li>1.5</li> <!-- Power -->
+			<li>1</li> <!-- Medicine -->
+		</BaseProductionMultiplicative>
+	</FactionColonies.BiomeResourceDef>
+	
+			<FactionColonies.BiomeResourceDef>
+		<defName>Wasteland</defName>
+		<label>Wasteland Resources</label>
+		<canSettle>true</canSettle>
+		<BaseProductionAdditive> <!-- 0 is default -->
+			<li>.1</li> <!-- Food -->
+			<li>2</li> <!-- Weapons -->
+			<li>2</li> <!-- Apparel -->
+			<li>.1</li> <!-- Animals -->
+			<li>.1</li> <!-- Logging -->
+			<li>2</li> <!-- Mining -->
+			<li>2</li> <!-- Research -->
+			<li>1</li> <!-- Power -->
+			<li>1</li> <!-- Medicine -->
+		</BaseProductionAdditive>
+		<BaseProductionMultiplicative> <!-- li is default -->
+			<li>1</li> <!-- Food -->
+			<li>1</li> <!-- Weapons -->
+			<li>1</li> <!-- Apparel -->
+			<li>1</li> <!-- Animals -->
+			<li>1</li> <!-- Logging -->
+			<li>1</li> <!-- Mining -->
+			<li>2</li> <!-- Research -->
+			<li>1</li> <!-- Power -->
+			<li>1</li> <!-- Medicine -->
+		</BaseProductionMultiplicative>
+	</FactionColonies.BiomeResourceDef>
 </Defs>
