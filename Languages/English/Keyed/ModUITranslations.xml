@@ -106,7 +106,7 @@
 <TitheList>Tithe List</TitheList>
 <StackCount>Stack Count</StackCount>
 <!--<MarketValue>Market Value</MarketValue>-->
-<TotalValue>Total Value</TotalValue>
+<FCTotalValue>Total Value</FCTotalValue>
 <CashSymbol>$</CashSymbol>
 
 <!-- MainTabWindow_Colony -->
