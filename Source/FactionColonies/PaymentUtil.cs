@@ -342,7 +342,10 @@ namespace FactionColonies
 					filter.SetAllow(DefDatabase<StuffCategoryDef>.GetNamedSilentFail("RB_Waxy"), false);
 					//Remove Alpha Animals skysteel
 					filter.SetAllow(DefDatabase<ThingDef>.GetNamedSilentFail("AA_SkySteel"), false);
-					break;
+
+                    //added by Swatacular
+                    filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("ElectronicsCat"), true);
+                    break;
 				case 6: //research
 
 					break;
@@ -465,7 +468,10 @@ namespace FactionColonies
 					filter.SetAllow(DefDatabase<ThingDef>.GetNamedSilentFail("AA_SkySteel"), false);
 					filter.SetAllow(ThingDefOf.ComponentIndustrial, true);
 					filter.SetAllow(ThingCategoryDefOf.StoneBlocks, true);
-					break;
+
+                    //added by Swatacular
+                    filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("ElectronicsCat"), true);
+                    break;
 				case 6: //research
 
 					break;
@@ -601,8 +607,9 @@ namespace FactionColonies
 					param.filter.SetAllow(DefDatabase<ThingDef>.GetNamedSilentFail("AA_SkySteel"), false);
 					param.filter.SetAllow(ThingDefOf.ComponentIndustrial, true);
 					param.filter.SetAllow(ThingCategoryDefOf.StoneBlocks, true);
-
-					break;
+                    //added by Swatacular
+                    param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("ElectronicsCat"), true);
+                    break;
 				case 6: //research
 					Log.Message("generateTithe - Research Tithe - How did you get here?");
 
@@ -794,7 +801,9 @@ namespace FactionColonies
 					//Remove Alpha Animals skysteel
 					param.filter.SetAllow(DefDatabase<ThingDef>.GetNamedSilentFail("AA_SkySteel"), false);
 					param.countRange = new IntRange(1, 10);
-					break;
+                    //added by Swatacular
+                    param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("ElectronicsCat"), true);
+                    break;
 				case "drugs": //drugs
 					param.filter.SetAllow(ThingCategoryDefOf.Drugs, true);
 					param.countRange = new IntRange(1, 2);
