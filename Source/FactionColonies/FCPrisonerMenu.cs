@@ -7,6 +7,7 @@ using RimWorld;
 using Verse;
 using Unity;
 using UnityEngine;
+using System.Reflection;
 
 
 namespace FactionColonies
@@ -198,6 +199,17 @@ namespace FactionColonies
                 {
                     Pawn pawn = new Pawn();
                     pawn = prisoner.prisoner;
+
+                    if (prisoner.healthTracker != null)
+                    {
+                        prisoner.prisoner.health = prisoner.healthTracker;
+                    }
+                    else
+                    {
+                        prisoner.prisoner.health = new Pawn_HealthTracker(prisoner.prisoner);
+                        prisoner.healthTracker = new Pawn_HealthTracker(prisoner.prisoner);
+                    }
+
                     pawn.health = prisoner.healthTracker;
 
 
@@ -223,8 +235,23 @@ namespace FactionColonies
 
                     list.Add(new FloatMenuOption("ReturnToPlayer".Translate(), delegate
                     {
-                        prisoner.prisoner.health = prisoner.healthTracker;
+                        if (prisoner.healthTracker != null)
+                        {
+                            prisoner.prisoner.health = prisoner.healthTracker;
+                        } else
+                        {
+                            prisoner.prisoner.health = new Pawn_HealthTracker(prisoner.prisoner);
+                            prisoner.healthTracker = new Pawn_HealthTracker(prisoner.prisoner);
+                        }
                         HealthUtility.DamageUntilDowned(prisoner.prisoner, false);
+                        if (prisoner.prisoner.guest == null)
+                        {
+                            prisoner.prisoner.guest = new Pawn_GuestTracker();
+                        }
+                        prisoner.prisoner.guest.isPrisonerInt = true;
+                        FieldInfo hostFaction = typeof(Pawn_GuestTracker).GetField("hostFactionInt", BindingFlags.NonPublic | BindingFlags.Instance);
+                        hostFaction.SetValue(prisoner.prisoner.guest, Find.FactionManager.OfPlayer);
+
                         List<Thing> things = new List<Thing>();
                         things.Add(prisoner.prisoner);
                         DropPodUtility.DropThingsNear(DropCellFinder.TradeDropSpot(Find.CurrentMap), Find.CurrentMap, things);

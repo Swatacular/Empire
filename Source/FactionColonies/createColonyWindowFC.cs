@@ -45,6 +45,9 @@ namespace FactionColonies
         public override void DoWindowContents(Rect inRect)
         {
             FactionFC faction = Find.World.GetComponent<FactionFC>();
+
+            faction.roadBuilder.displayPaths();
+
             if (Find.WorldSelector.selectedTile != -1 && Find.WorldSelector.selectedTile != currentTileSelected)
             {
                 currentTileSelected = Find.WorldSelector.selectedTile;
@@ -153,6 +156,7 @@ namespace FactionColonies
                         //create settle event
                         FCEvent tmp = FCEventMaker.MakeEvent(FCEventDefOf.settleNewColony);
                         tmp.location = currentTileSelected;
+                        tmp.planetName = Find.World.info.name;
                         tmp.timeTillTrigger = Find.TickManager.TicksGame + timeToTravel;
                         tmp.source = Find.World.GetComponent<FactionFC>().capitalLocation;
                         Find.World.GetComponent<FactionFC>().addEvent(tmp);

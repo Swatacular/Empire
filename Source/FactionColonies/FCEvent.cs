@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Verse;
 using RimWorld;
+using RimWorld.Planet;
 using HarmonyLib;
 
 namespace FactionColonies
@@ -305,14 +306,22 @@ namespace FactionColonies
                     if (temp.def.defName == "settleNewColony")
                     {  //Settle new colony event
                        //Log.Message(events[i].def.defName + " event triggered" + Find.TickManager.TicksGame)
-                        FactionColonies.createPlayerColonySettlement(temp.location);
+                        
+                        if (Find.World.info.name == temp.planetName)
+                        {
+                            Settlement settlement = FactionColonies.createPlayerColonySettlement(temp.location, true, temp.planetName);
+                        } else
+                        {
+                            Settlement settlement = FactionColonies.createPlayerColonySettlement(temp.location, false, temp.planetName);
+                            faction.createSettlementQueue.Add(new SettlementSoS2Info(temp.planetName, temp.location));
+                        }
                         faction.settlementCaravansList.Remove(temp.location.ToString());
                     }
                     else
                     if (temp.def.defName == "taxColony")
                     {
-                        Messages.Message("TaxesFrom".Translate() + " " + faction.getSettlementName(temp.source) + " " + "HaveBeenDelivered".Translate() + "!", MessageTypeDefOf.PositiveEvent);
-                        string str = "TaxesFrom".Translate() + " " + faction.getSettlementName(temp.source) + " " + "HaveBeenDelivered".Translate() + "!";
+                        Messages.Message("TaxesFrom".Translate() + " " + faction.getSettlementName(temp.source, temp.planetName) + " " + "HaveBeenDelivered".Translate() + "!", MessageTypeDefOf.PositiveEvent);
+                        string str = "TaxesFrom".Translate() + " " + faction.getSettlementName(temp.source, temp.planetName) + " " + "HaveBeenDelivered".Translate() + "!";
                         
                         foreach (Thing thing in temp.goods)
                         {
@@ -324,14 +333,14 @@ namespace FactionColonies
                     else
                     if (temp.def.defName == "constructBuilding")
                     { //Create building
-                        faction.settlements[faction.returnSettlementFCIDByLocation(temp.source)].constructBuilding(temp.building, temp.buildingSlot);
-                        Messages.Message(temp.building.label + " " + "HasBeenConstructedAt".Translate() + " " + faction.settlements[faction.returnSettlementFCIDByLocation(temp.source)].name + "!", MessageTypeDefOf.PositiveEvent);
+                        faction.settlements[faction.returnSettlementFCIDByLocation(temp.source, temp.planetName)].constructBuilding(temp.building, temp.buildingSlot);
+                        Messages.Message(temp.building.label + " " + "HasBeenConstructedAt".Translate() + " " + faction.settlements[faction.returnSettlementFCIDByLocation(temp.source, temp.planetName)].name + "!", MessageTypeDefOf.PositiveEvent);
                     }
                     else
                     if (temp.def.defName == "enactSettlementPolicy")
                     { //enact policy
-                        faction.settlements[faction.returnSettlementFCIDByLocation(temp.source)].enactPolicy(temp.policy, temp.policySlot);
-                        Messages.Message(temp.policy.label + " " + "HasBeenEnactedAt".Translate() + " " + faction.settlements[faction.returnSettlementFCIDByLocation(temp.source)].name + "!", MessageTypeDefOf.PositiveEvent);
+                        faction.settlements[faction.returnSettlementFCIDByLocation(temp.source, temp.planetName)].enactPolicy(temp.policy, temp.policySlot);
+                        Messages.Message(temp.policy.label + " " + "HasBeenEnactedAt".Translate() + " " + faction.settlements[faction.returnSettlementFCIDByLocation(temp.source, temp.planetName)].name + "!", MessageTypeDefOf.PositiveEvent);
 
                     }
                     else
@@ -343,18 +352,18 @@ namespace FactionColonies
                     else
                     if (temp.def.defName == "upgradeSettlement")
                     {
-                        if (faction.returnSettlementByLocation(temp.location) != null) 
+                        if (faction.returnSettlementByLocation(temp.location, temp.planetName) != null) 
                         { //if settlement is not null
-                            SettlementFC settlement = faction.returnSettlementByLocation(temp.location);
+                            SettlementFC settlement = faction.returnSettlementByLocation(temp.location, temp.planetName);
                             settlement.upgradeSettlement();
-                            Messages.Message(settlement.name + " " + "HasBeenUpgraded".Translate() + " " + settlement.settlementLevel + "!", MessageTypeDefOf.PositiveEvent);
+                            Find.LetterStack.ReceiveLetter("Settlement Upgrade", settlement.name + " " + "HasBeenUpgraded".Translate() + " " + settlement.settlementLevel + "!", LetterDefOf.PositiveEvent);
                         }
                     }
                     else
                     if( temp.def.defName == "captureEnemySettlement" || temp.def.defName == "raidEnemySettlement")
                     {
                         //Process military event
-                        faction.returnSettlementByLocation(temp.location).processMilitaryEvent();
+                        faction.returnSettlementByLocation(temp.location, temp.planetName).processMilitaryEvent();
 
 
                     }
@@ -362,7 +371,13 @@ namespace FactionColonies
                     if (temp.def.defName == "cooldownMilitary")
                     {
                         //Process military event
-                        faction.returnSettlementByLocation(temp.location).returnMilitary();
+                        if (temp.planetName == null)
+                        {
+                            Log.Message("temp.planetName null in FCEvent.ProcessEvents. Please report to Empire Mod with what you used this settlement for.");
+                            Messages.Message("temp.planetName null in FCEvent.ProcessEvents. Please report to Empire Mod with what you used this settlement for.", MessageTypeDefOf.NegativeEvent);
+                        }
+                        faction.returnSettlementByLocation(temp.location, temp.planetName).returnMilitary(true);
+                        
 
 
                     }
@@ -425,7 +440,7 @@ namespace FactionColonies
                             if (temp.militaryForceDefending.forceRemaining >= 7)
                             {
                                 Find.LetterStack.ReceiveLetter("OverwhelmingVictory".Translate(), "OverwhelmingVictoryDesc".Translate(), LetterDefOf.PositiveEvent);
-                                temp.militaryForceDefending.homeSettlement.returnMilitary();
+                                temp.militaryForceDefending.homeSettlement.returnMilitary(true);
                             } else 
                             { 
                                 temp.militaryForceDefending.homeSettlement.cooldownMilitary();
@@ -645,13 +660,14 @@ namespace FactionColonies
             if (bill.settlement != null && faction.settlements.Contains(bill.settlement))
             {
                 tmp.source = bill.settlement.mapLocation; //source location
-                tmp.customDescription = TranslatorFormattedStringExtensions.Translate("TaxesFromSettlementAreBeingDelivered", faction.returnSettlementByLocation(tmp.source).name);
+                tmp.customDescription = TranslatorFormattedStringExtensions.Translate("TaxesFromSettlementAreBeingDelivered", faction.returnSettlementByLocation(tmp.source, bill.settlement.planetName).name);
             } else
             {
                 tmp.source = -1;
                 tmp.customDescription = TranslatorFormattedStringExtensions.Translate("TaxesFromSettlementAreBeingDelivered", "Null");
             }
             tmp.location = faction.capitalLocation;
+            tmp.planetName = bill.settlement.planetName;
             tmp.timeTillTrigger = Find.TickManager.TicksGame + FactionColonies.ReturnTicksToArrive(tmp.source, tmp.location);
             tmp.hasCustomDescription = true;
             //add tithe
@@ -719,6 +735,7 @@ namespace FactionColonies
             //Ref
             Scribe_Defs.Look<FCEventDef>(ref def, "def");
             Scribe_Values.Look<int>(ref location, "location");
+            Scribe_Values.Look<string>(ref planetName, "planetName");
             Scribe_Values.Look<int>(ref timeTillTrigger, "timeTillTrigger");
             Scribe_Values.Look<int>(ref source, "source");
             Scribe_Values.Look<bool>(ref hasDestination, "hasDestination");
@@ -784,6 +801,7 @@ namespace FactionColonies
 
         public FCEventDef def = new FCEventDef();
         public int location = -1; //destination
+        public string planetName;
         public int timeTillTrigger = -1;
         public int loadID = -1;
         public int source = -1; //source location

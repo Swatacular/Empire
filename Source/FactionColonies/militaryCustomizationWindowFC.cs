@@ -7,28 +7,34 @@ using System.Reflection;
 using UnityEngine;
 using RimWorld;
 using Verse;
+using Verse.AI.Group;
 using RimWorld.Planet;
 using HarmonyLib;
 
 namespace FactionColonies
 {
 
-	public class MilitaryFireSupport : IExposable
+	public class MilitaryFireSupport : IExposable, ILoadReferenceable
 	{
+		public int loadID = -1;
+		public string name;
+		public float totalCost;
 		public int timeRunning;
 		public int ticksTillEnd;
-		public float accuracy;
+		public float accuracy = 15;
 		public string fireSupportType;
 		public Map map;
 		public IntVec3 location;
 		public int startupTime;
+		public IntVec3 sourceLocation;
+		public List<ThingDef> projectiles;
 
 		public MilitaryFireSupport()
 		{
 
 		}
 
-		public MilitaryFireSupport(string fireSupportType, Map map, IntVec3 location, int ticksTillEnd, int startupTime, float accuracy)
+		public MilitaryFireSupport(string fireSupportType, Map map, IntVec3 location, int ticksTillEnd, int startupTime, float accuracy, List<ThingDef> projectiles = null)
 		{
 			this.fireSupportType = fireSupportType;
 			this.ticksTillEnd = Find.TickManager.TicksGame + ticksTillEnd + startupTime;
@@ -36,17 +42,87 @@ namespace FactionColonies
 			this.map = map;
 			this.location = location;
 			this.startupTime = startupTime;
+			this.sourceLocation = CellFinder.RandomEdgeCell(map);
+			this.projectiles = projectiles;
 		}
+
+		public string GetUniqueLoadID()
+		{
+			return "MilitaryFireSupport_" + this.loadID;
+		}
+
+		public void setLoadID()
+		{
+			this.loadID = Find.World.GetComponent<FactionFC>().GetNextMilitaryFireSupportID();
+		}
+
+		public float returnAccuracyCostPercentage()
+		{
+			return (float)Math.Round((Math.Max(0, 15 - accuracy) / 15) * 100);
+		}
+
+		public float returnTotalCost()
+		{
+			float cost = 0;
+			foreach (ThingDef def in projectiles)
+			{
+				cost += def.BaseMarketValue * 1.5f * (1+returnAccuracyCostPercentage()/100);
+			}
+			this.totalCost = (float)Math.Round(cost);
+			return this.totalCost;
+		}
+
+		public void delete()
+		{
+			Find.World.GetComponent<FactionFC>().militaryCustomizationUtil.fireSupportDefs.Remove(this);
+		}
+
+		public ThingDef expendProjectile()
+		{
+			if (projectiles.Count() > 0)
+			{
+				ThingDef projectile = projectiles[0];
+				projectiles.RemoveAt(0);
+				return projectile;
+			}
+			else
+			{
+				return null;
+			}
+		}
+
+		public List<ThingDef> returnFireSupportOptions()
+		{
+			// return list of thingdefs that can be used as fire support
+			ThingSetMaker thingSetMaker = new ThingSetMaker_Count();
+			ThingSetMakerParams param = new ThingSetMakerParams();
+			param.filter = new ThingFilter();
+			param.techLevel = Find.World.GetComponent<FactionFC>().techLevel;
+
+			param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("MortarShells"), true);
+			if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("AmmoShells") != null)
+				param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("AmmoShells"), true);
+			List<ThingDef> list = thingSetMaker.AllGeneratableThingsDebug(param).ToList();
+			return list;
+		}
+
+
+
+
 
 		public void ExposeData()
 		{
+			Scribe_Values.Look<int>(ref loadID, "loadID");
+			Scribe_Values.Look<string>(ref name, "name");
 			Scribe_Values.Look<int>(ref timeRunning, "timeRunning");
 			Scribe_Values.Look<int>(ref ticksTillEnd, "ticksTillEnd");
 			Scribe_Values.Look<float>(ref accuracy, "accuracy");
 			Scribe_Values.Look<string>(ref fireSupportType, "fireSupportType");
 			Scribe_References.Look<Map>(ref map, "map");
 			Scribe_Values.Look<IntVec3>(ref location, "location");
+			Scribe_Values.Look<IntVec3>(ref location, "sourceLocation");
 			Scribe_Values.Look<int>(ref startupTime, "startupTime");
+			Scribe_Collections.Look<ThingDef>(ref projectiles, "projectiles", LookMode.Def);
 		}
 
 
@@ -60,6 +136,7 @@ namespace FactionColonies
 		public List<MilSquadFC> squads = new List<MilSquadFC>();
 		public List<MercenarySquadFC> mercenarySquads = new List<MercenarySquadFC>();
 		public List<MilitaryFireSupport> fireSupport = new List<MilitaryFireSupport>();
+		public List<MilitaryFireSupport> fireSupportDefs = new List<MilitaryFireSupport>();
 		public MilUnitFC blankUnit = null;
 		public List<Mercenary> deadPawns = new List<Mercenary>();
 		public int tickChanged = 0;
@@ -93,6 +170,10 @@ namespace FactionColonies
 				deadPawns = new List<Mercenary>();
 			}
 
+			if (fireSupportDefs == null)
+			{
+				fireSupportDefs = new List<MilitaryFireSupport>();
+			}
 		}
 
 		public void checkMilitaryUtilForErrors()
@@ -169,6 +250,18 @@ namespace FactionColonies
 			}
 		}
 
+		public MercenarySquadFC returnSquadFromUnit(Pawn unit)
+		{
+			foreach (MercenarySquadFC squad in mercenarySquads)
+			{
+				if (squad.AllEquippedMercenaryPawns.Contains(unit))
+				{
+					return squad;
+				}
+			}
+			Log.Message("Empire - MercenarySquadFC - returnSquadFromUnit - Did not find squad.");
+			return null;
+		}
 		public List<Mercenary> AllMercenaries
 		{
 			get
@@ -305,6 +398,7 @@ namespace FactionColonies
 			Scribe_Collections.Look<MilSquadFC>(ref squads, "squads", LookMode.Deep);
 			Scribe_Collections.Look<MercenarySquadFC>(ref mercenarySquads, "mercenarySquads", LookMode.Deep);
 			Scribe_Collections.Look<MilitaryFireSupport>(ref fireSupport, "fireSupport", LookMode.Deep);
+			Scribe_Collections.Look<MilitaryFireSupport>(ref fireSupportDefs, "fireSupportDefs", LookMode.Deep);
 			Scribe_Collections.Look<Mercenary>(ref deadPawns, "deadPawns", LookMode.Deep);
 
 			Scribe_Deep.Look<MilUnitFC>(ref blankUnit, "blankUnit");
@@ -541,6 +635,7 @@ namespace FactionColonies
 		public static int Attack = 2;
 		public static int MoveTo = 3;
 		public static int RecoverWounded = 4;
+		public static int Leave = 5;
 
 	}
 
@@ -562,6 +657,9 @@ namespace FactionColonies
 		public List<ThingWithComps> UsedWeaponList;
 		public List<Apparel> UsedApparelList;
 		public int tickChanged = 0;
+		public bool hasLord = false;
+		public Map map;
+		public Lord lord;
 
 
 
@@ -583,6 +681,9 @@ namespace FactionColonies
 			Scribe_Values.Look<int>(ref order, "order", -1);
 			Scribe_Values.Look<int>(ref timeDeployed, "timeDeployed", -1);
 			Scribe_Values.Look<IntVec3>(ref orderLocation, "orderLocation");
+			Scribe_Values.Look<bool>(ref hasLord, "hasLord", false);
+			Scribe_References.Look<Map>(ref map, "map");
+			Scribe_References.Look<Lord>(ref lord, "lord");
 		}
 
 		public string GetUniqueLoadID()
@@ -673,7 +774,7 @@ namespace FactionColonies
 				List<Mercenary> pawns = new List<Mercenary>();
 				foreach (Mercenary merc in animals)
 				{
-					if (merc.squad.isDeployed == true)
+					if (merc.pawn.Map != null)
 					{
 						pawns.Add(merc);
 					}
@@ -755,14 +856,20 @@ namespace FactionColonies
 			{
 				Apparel apparel = DroppedApparel[0];
 				UsedApparelList.Remove(DroppedApparel[0]);
-				apparel.Destroy();
+				if (apparel != null)
+				{
+					apparel.Destroy();
+				}
 			}
 
 			while (DroppedWeapons.Count() > 0)
 			{
 				ThingWithComps weapon = DroppedWeapons[0];
 				UsedWeaponList.Remove(DroppedWeapons[0]);
-				weapon.Destroy();
+				if (weapon != null)
+				{
+					weapon.Destroy();
+				}
 
 			}
 		}
@@ -811,6 +918,7 @@ namespace FactionColonies
 			Pawn newPawn;
 			newPawn = PawnGenerator.GeneratePawn(new PawnGenerationRequest(raceChoice, FactionColonies.getPlayerColonyFaction(), PawnGenerationContext.NonPlayer, -1, false, false, false, false, false, true, 0, false, false, false, false, false, false, false, false, 0, null, 0, null, null, null, null, null, null, null, null, null, null, null, null));
 			newPawn.apparel.DestroyAll();
+			newPawn.equipment.DestroyAllEquipment();
 			//merc = (Mercenary)newPawn;
 			merc.squad = this;
 			merc.settlement = settlement;
@@ -1224,10 +1332,13 @@ namespace FactionColonies
 		string selectedText = "";
 		MilUnitFC selectedUnit = null;
 		MilSquadFC selectedSquad = null;
+		MilitaryFireSupport selectedSupport = null;
 		SettlementFC settlementPointReference = null;
 		MilitaryCustomizationUtil util;
-		public int scroll = 0;
-		public int maxScroll = 0;
+		public float scroll = 0;
+		//public int maxScroll = 0;
+		public float settlementMaxScroll = 0;
+		public float fireSupportMaxScroll = 0;
 		public int settlementHeight = 0;
 		public int settlementYSpacing = 0;
 		public int settlementWindowHeight = 500;
@@ -1263,7 +1374,7 @@ namespace FactionColonies
 		{
 			base.PreOpen();
 			scroll = 0;
-			maxScroll = (Find.World.GetComponent<FactionFC>().settlements.Count() * (settlementYSpacing + settlementHeight) - settlementWindowHeight);
+			settlementMaxScroll = (Find.World.GetComponent<FactionFC>().settlements.Count() * (settlementYSpacing + settlementHeight) - settlementWindowHeight);
 		}
 
 		public override void PostClose()
@@ -1296,6 +1407,9 @@ namespace FactionColonies
 				case 3:
 					DrawTabUnit(inRect);
 					break;
+				case 4:
+					DrawTabFireSupport(inRect);
+					break;
 			}
 
 			DrawHeaderTabs(inRect);
@@ -1306,16 +1420,17 @@ namespace FactionColonies
 		public void DrawHeaderTabs(Rect inRect)
 		{
 			Rect milDesigination = new Rect(0, 0, 0, 35);
-			Rect milSetSquad = new Rect(milDesigination.x + milDesigination.width, milDesigination.y, 250, milDesigination.height);
-			Rect milCreateSquad = new Rect(milSetSquad.x + milSetSquad.width, milDesigination.y, 250, milDesigination.height);
-			Rect milCreateUnit = new Rect(milCreateSquad.x + milCreateSquad.width, milDesigination.y, 250, milDesigination.height);
+			Rect milSetSquad = new Rect(milDesigination.x + milDesigination.width, milDesigination.y, 187, milDesigination.height);
+			Rect milCreateSquad = new Rect(milSetSquad.x + milSetSquad.width, milDesigination.y, 187, milDesigination.height);
+			Rect milCreateUnit = new Rect(milCreateSquad.x + milCreateSquad.width, milDesigination.y, 187, milDesigination.height);
+			Rect milCreateFiresupport = new Rect(milCreateUnit.x + milCreateUnit.width, milDesigination.y, 187, milDesigination.height);
 			Rect helpButton = new Rect(760, 0, 30, 30);
 
 			
 			if (Widgets.ButtonImage(helpButton, texLoad.questionmark))
 			{
 				string header = "Help! What is this for?";
-				string description = "Need Help with this menu? Go to 24:50 of this youtube video: https://youtu.be/FrVFMjC2RJc";
+				string description = "Need Help with this menu? Go to this youtube video: https://youtu.be/lvWb1rMMsq8";
 				Find.WindowStack.Add(new descWindowFC(description, header));
 			}
 
@@ -1354,6 +1469,13 @@ namespace FactionColonies
 				{
 					selectedText = selectedUnit.name;
 				}
+				util.checkMilitaryUtilForErrors();
+			}
+			if (Widgets.ButtonTextSubtle(milCreateFiresupport, "Create Fire Support"))
+			{
+				tab = 4;
+				selectedText = "Select a fire support";
+				
 				util.checkMilitaryUtilForErrors();
 			}
 		}
@@ -1400,7 +1522,7 @@ namespace FactionColonies
 					{
 						Find.WindowStack.Add(new settlementWindowFC(settlement));
 					}
-					Widgets.Label(new Rect(MilitaryLevel.x, MilitaryLevel.y + (SettlementBox.height + settlementYSpacing) * count + scroll, MilitaryLevel.width, MilitaryLevel.height), "Mil Level: " + settlement.settlementMilitaryLevel + " - Max Squad Cost: " + FactionColonies.calculateMilitaryLevelPoints(settlement.settlementMilitaryLevel));
+					Widgets.Label(new Rect(MilitaryLevel.x, MilitaryLevel.y + (SettlementBox.height + settlementYSpacing) * count + scroll, MilitaryLevel.width, MilitaryLevel.height*2), "Mil Level: " + settlement.settlementMilitaryLevel + " - Max Squad Cost: " + FactionColonies.calculateMilitaryLevelPoints(settlement.settlementMilitaryLevel));
 					if(settlement.militarySquad != null)
 					{
 						if (settlement.militarySquad.outfit != null)
@@ -1459,10 +1581,22 @@ namespace FactionColonies
 					//Deploy Squad
 					if (Widgets.ButtonText(new Rect(buttonDeploySquad.x, buttonDeploySquad.y + (SettlementBox.height + settlementYSpacing) * count + scroll, buttonDeploySquad.width, buttonDeploySquad.height), "Deploy Squad"))
 					{
-						if (!(settlement.isMilitaryBusy()) && settlement.isMilitarySquadValid()){
-							FactionColonies.CallinAlliedForces(settlement);
-							Find.WindowStack.currentlyDrawnWindow.Close();
+						if (!(settlement.isMilitaryBusy()) && settlement.isMilitarySquadValid())
+						{
+
+							List<FloatMenuOption> options = new List<FloatMenuOption>();
+							options.Add(new FloatMenuOption("Walk into map", delegate { FactionColonies.CallinAlliedForces(settlement, false); Find.WindowStack.currentlyDrawnWindow.Close(); }));
+							//check if medieval only
+							bool medievalOnly = LoadedModManager.GetMod<FactionColoniesMod>().GetSettings<FactionColonies>().medievalTechOnly;
+							if (!medievalOnly && Find.ResearchManager.GetProgress(DefDatabase<ResearchProjectDef>.GetNamed("TransportPod", false)) == DefDatabase<ResearchProjectDef>.GetNamed("TransportPod", false).baseCost)
+							{
+								options.Add(new FloatMenuOption("Drop-Pod", delegate { FactionColonies.CallinAlliedForces(settlement, true); Find.WindowStack.currentlyDrawnWindow.Close(); }));
+
+							}
+							Find.WindowStack.Add(new FloatMenu(options));
+							
 						}
+
 					}
 
 					//Reset Squad
@@ -1486,39 +1620,56 @@ namespace FactionColonies
 
 					}
 
-					//Order FireSupport
+					//Order Fire Support
 					if (Widgets.ButtonText(new Rect(buttonOrderFireSupport.x, buttonOrderFireSupport.y + (SettlementBox.height + settlementYSpacing) * count + scroll, buttonOrderFireSupport.width, buttonOrderFireSupport.height), "Order Fire Support"))
 					{
 						List<FloatMenuOption> list = new List<FloatMenuOption>();
 
-						FloatMenuOption artillery = new FloatMenuOption("Artillery (3000)", delegate
-						{
-							if (settlement.buildings.Contains(BuildingFCDefOf.artilleryOutpost))
-							{
-								if (settlement.artilleryTimer <= Find.TickManager.TicksGame)
-								{
-									if (PaymentUtil.getSilver() >= 3000)
-									{
-										FactionColonies.LightArtilleryStrike(settlement);
-										Find.WindowStack.TryRemove(typeof( militaryCustomizationWindowFC));
 
+						foreach (MilitaryFireSupport support in util.fireSupportDefs)
+						{
+							float cost = support.returnTotalCost();
+							FloatMenuOption option = new FloatMenuOption(support.name + " - $" + cost, delegate 
+							{
+								if (support.returnTotalCost() <= FactionColonies.calculateMilitaryLevelPoints(settlement.settlementMilitaryLevel))
+								{
+									if (settlement.buildings.Contains(BuildingFCDefOf.artilleryOutpost))
+									{
+										if (settlement.artilleryTimer <= Find.TickManager.TicksGame)
+										{
+											if (PaymentUtil.getSilver() >= cost)
+											{
+												FactionColonies.FireSupport(settlement, support);
+												Find.WindowStack.TryRemove(typeof(militaryCustomizationWindowFC));
+
+											}
+											else
+											{
+												Messages.Message("You lack the required amount of silver to use that firesupport option!", MessageTypeDefOf.RejectInput);
+											}
+										}
+										else
+										{
+											Messages.Message("That firesupport option is on cooldown for another " + GenDate.ToStringTicksToDays(settlement.artilleryTimer - Find.TickManager.TicksGame), MessageTypeDefOf.RejectInput);
+										}
 									}
 									else
 									{
-										Messages.Message("You lack the required amount of silver to use that firesupport option!", MessageTypeDefOf.RejectInput);
+										Messages.Message("The settlement requires an artillery outpost to be built to use that firesupport option", MessageTypeDefOf.RejectInput);
 									}
-								}
+								} 
 								else
 								{
-									Messages.Message("That firesupport option is on cooldown for another " + GenDate.ToStringTicksToDays(settlement.artilleryTimer - Find.TickManager.TicksGame), MessageTypeDefOf.RejectInput);
+									Messages.Message("The settlement requires a higher military level to use that fire support!", MessageTypeDefOf.RejectInput);
 								}
-							} else
-							{
-								Messages.Message("The settlement requires an artillery outpost to be built to use that firesupport option", MessageTypeDefOf.RejectInput);
-							}
-						});
+							});
+							list.Add(option);
+						}
 
-						list.Add(artillery);
+						if (list.Count() == 0)
+						{
+							list.Add(new FloatMenuOption("No fire supports currently made. Make one", delegate { }));
+						}
 
 						FloatMenu menu = new FloatMenu(list);
 						Find.WindowStack.Add(menu);
@@ -1537,7 +1688,7 @@ namespace FactionColonies
 			if (Event.current.type == EventType.ScrollWheel)
 			{
 
-				scrollWindow(Event.current.delta.y);
+				scrollWindow(Event.current.delta.y, settlementMaxScroll);
 			}
 
 
@@ -1949,7 +2100,7 @@ namespace FactionColonies
 							list.Add(new FloatMenuOption(animal.LabelCap + " - Cost: " + Math.Floor(animal.race.BaseMarketValue * FactionColonies.militaryAnimalCostMultiplier), delegate {
 								//Do add animal code here
 								selectedUnit.animal = animal;
-							}));
+							}, animal.race.uiIcon, Color.white));
 						}
 					}
 					list.Sort(FactionColonies.CompareFloatMenuOption);
@@ -2540,12 +2691,174 @@ namespace FactionColonies
 		}
 
 
+		public void DrawTabFireSupport(Rect inRect)
+		{
 
-		private void scrollWindow(float num)
+			//set text anchor and font
+			GameFont fontBefore = Text.Font;
+			TextAnchor anchorBefore = Text.Anchor;
+
+
+			float projectileBoxHeight = 30;
+			Rect SelectionBar = new Rect(5, 45, 200, 30);
+			Rect nameTextField = new Rect(5, 90, 250, 30);
+			Rect floatRangeAccuracyLabel = new Rect(nameTextField.x, nameTextField.y + nameTextField.height + 5, nameTextField.width, (float)(nameTextField.height*1.5));
+			Rect floatRangeAccuracy = new Rect(floatRangeAccuracyLabel.x, floatRangeAccuracyLabel.y + floatRangeAccuracyLabel.height + 5, floatRangeAccuracyLabel.width, floatRangeAccuracyLabel.height);
+
+
+			Rect UnitStandBase = new Rect(140, 200, 50, 30);
+			Rect TotalCost = new Rect(325, 50, 450, 20);
+			Rect numberProjectiles = new Rect(TotalCost.x, TotalCost.y + TotalCost.height + 5, TotalCost.width, TotalCost.height);
+			Rect duration = new Rect(numberProjectiles.x, numberProjectiles.y + numberProjectiles.height + 5, numberProjectiles.width, numberProjectiles.height);
+
+			Rect ResetButton = new Rect(700-2, 100, 100, 30);
+			Rect DeleteButton = new Rect(ResetButton.x, ResetButton.y + ResetButton.height + 5, ResetButton.width, ResetButton.height);
+			Rect PointRefButton = new Rect(DeleteButton.x, DeleteButton.y + DeleteButton.height + 5, DeleteButton.width, DeleteButton.height);
+
+
+			//Up here to make sure it goes behind other layers
+			if (selectedSupport != null)
+			{
+				DrawFireSupportBox(10, 230, 30);
+			}
+
+			Widgets.DrawMenuSection(new Rect(0, 0, 800, 225));
+
+			//If firesupport is not selected
+			if (Widgets.CustomButtonText(ref SelectionBar, selectedText, Color.gray, Color.white, Color.black))
+			{
+
+
+				List<FloatMenuOption> supports = new List<FloatMenuOption>();
+
+				//Option to create new firesupport
+				supports.Add(new FloatMenuOption("Create New Fire Support", delegate {
+					MilitaryFireSupport newFireSupport = new MilitaryFireSupport();
+					newFireSupport.name = "New Fire Support " + (util.fireSupportDefs.Count() + 1);
+					newFireSupport.setLoadID();
+					newFireSupport.projectiles = new List<ThingDef>();
+					selectedText = newFireSupport.name;
+					selectedSupport = newFireSupport;
+					util.fireSupportDefs.Add(newFireSupport);
+
+				}));
+
+				//Create list of selectable firesupports
+				foreach (MilitaryFireSupport support in util.fireSupportDefs)
+				{
+					supports.Add(new FloatMenuOption(support.name, delegate {
+						//Unit is selected
+						selectedText = support.name;
+						selectedSupport = support;
+					}));
+				}
+				FloatMenu selection = new FloatMenu(supports);
+				Find.WindowStack.Add(selection);
+			}
+
+
+
+			//if firesupport is selected
+			if (selectedSupport != null)
+			{
+				//Need to adjust
+				fireSupportMaxScroll = selectedSupport.projectiles.Count() * projectileBoxHeight - 10 * projectileBoxHeight;
+
+				Text.Anchor = TextAnchor.MiddleLeft;
+				Text.Font = GameFont.Small;
+
+
+
+
+				if (settlementPointReference != null)
+				{
+					Widgets.Label(TotalCost, "Total Fire Support Silver Cost: " + selectedSupport.returnTotalCost() + " / " + FactionColonies.calculateMilitaryLevelPoints(settlementPointReference.settlementMilitaryLevel) + " (Max Cost)");
+				}
+				else
+				{
+					Widgets.Label(TotalCost, "Total Fire Support Silver Cost: " + selectedSupport.returnTotalCost() + " / " + "No Reference");
+				}
+				Widgets.Label(numberProjectiles, "Number of Projectiles: " + selectedSupport.projectiles.Count().ToString());
+				Widgets.Label(duration, "Duration of fire support: " + Math.Round((double)selectedSupport.projectiles.Count() * .25, 2).ToString() + " seconds");
+				Widgets.Label(floatRangeAccuracyLabel, selectedSupport.accuracy + " = Accuracy of fire support (In tiles radius): Affecting cost by : " + selectedSupport.returnAccuracyCostPercentage() + "%"  );
+				selectedSupport.accuracy = Widgets.HorizontalSlider(floatRangeAccuracy, selectedSupport.accuracy, Math.Max(3, (15 - Find.World.GetComponent<FactionFC>().returnHighestMilitaryLevel())), 30, roundTo: 1);
+				Text.Font = GameFont.Tiny;
+				Text.Anchor = TextAnchor.UpperCenter;
+
+
+
+				//Unit Name
+				selectedSupport.name = Widgets.TextField(nameTextField, selectedSupport.name);
+
+				if (Widgets.ButtonText(ResetButton, "Reset to Default"))
+				{
+					selectedSupport.projectiles = new List<ThingDef>();
+				}
+
+				if (Widgets.ButtonText(DeleteButton, "Delete Support"))
+				{
+					selectedSupport.delete();
+					util.checkMilitaryUtilForErrors();
+					selectedSupport = null;
+					selectedText = "Select A Fire Support";
+
+					//Reset Text anchor and font
+					Text.Font = fontBefore;
+					Text.Anchor = anchorBefore;
+					return;
+				}
+
+				if (Widgets.ButtonText(PointRefButton, "Set Point Ref"))
+				{
+					List<FloatMenuOption> settlementList = new List<FloatMenuOption>();
+
+					foreach (SettlementFC settlement in Find.World.GetComponent<FactionFC>().settlements)
+					{
+						settlementList.Add(new FloatMenuOption(settlement.name + " - Military Level : " + settlement.settlementMilitaryLevel, delegate
+						{
+							//set points
+							settlementPointReference = settlement;
+						}));
+					}
+
+					if (settlementList.Count() == 0)
+					{
+						settlementList.Add(new FloatMenuOption("No Valid Settlements", null));
+					}
+					FloatMenu floatMenu = new FloatMenu(settlementList);
+					floatMenu.vanishIfMouseDistant = true;
+					Find.WindowStack.Add(floatMenu);
+
+				}
+
+				
+
+
+
+
+
+
+				//Reset Text anchor and font
+				Text.Font = fontBefore;
+				Text.Anchor = anchorBefore;
+			}
+
+			if (Event.current.type == EventType.ScrollWheel)
+			{
+
+				scrollWindow(Event.current.delta.y, fireSupportMaxScroll);
+			}
+
+			//Reset Text anchor and font
+			Text.Font = fontBefore;
+			Text.Anchor = anchorBefore;
+		}
+
+		private void scrollWindow(float num, float maxScroll)
 		{
 			if (scroll - num * 5 < -1 * maxScroll)
 			{
-				scroll = -1 * maxScroll;
+				scroll = -1f * maxScroll;
 			}
 			else if (scroll - num * 5 > 0)
 			{
@@ -2558,6 +2871,249 @@ namespace FactionColonies
 			Event.current.Use();
 
 			//Log.Message(scroll.ToString());
+		}
+
+		public Rect deriveRectRow(Rect rect, float x, float y = 0, float width = 0, float height = 0)
+		{
+			float inputWidth;
+			float inputHeight;
+			if (width == 0)
+			{
+				inputWidth = rect.width;
+			}
+			else
+			{
+				inputWidth = width;
+			}
+			if (height == 0)
+			{
+				inputHeight = rect.height;
+			}
+			else
+			{
+				inputHeight = height;
+			}
+
+			Rect newRect = new Rect(rect.x + rect.width + x, rect.y + y, inputWidth, inputHeight);
+			//Log.Message(newRect.width.ToString());
+			return newRect;
+		}
+		public void DrawFireSupportBox(float x, float y, float rowHeight)
+		{
+			//Set Text anchor and font
+			GameFont fontBefore = Text.Font;
+			TextAnchor anchorBefore = Text.Anchor;
+			Text.Anchor = TextAnchor.MiddleCenter;
+			Text.Font = GameFont.Small;
+
+
+
+
+			for (int i = 0; i <= selectedSupport.projectiles.Count(); i++)
+			{
+				//Declare Rects
+				Rect text = new Rect(x + 2, y + 2 + i*rowHeight + scroll, rowHeight - 4, rowHeight - 4);
+				Rect cost = deriveRectRow(text, 2, 0, 150);
+				Rect icon = deriveRectRow(cost, 2, 0, 250);
+				//Rect name = deriveRectRow(icon, 2, 0, 150);
+				Rect options = deriveRectRow(icon, 2, 0, 74);
+				Rect upArrow = deriveRectRow(options, 12, 0, rowHeight - 4, rowHeight - 4);
+				Rect downArrow = deriveRectRow(upArrow, 4);
+				Rect delete = deriveRectRow(downArrow, 12);
+				//Create outside box last to encapsulate entirety
+				Rect box = new Rect(x, y + i * rowHeight + scroll, delete.x + delete.width + 4 - x, rowHeight);
+
+
+
+				Widgets.DrawHighlight(box);
+				Widgets.DrawMenuSection(box);
+
+				if (i == selectedSupport.projectiles.Count())
+				{ //If on last row
+					Text.Anchor = TextAnchor.MiddleCenter;
+					Widgets.Label(text, i.ToString());
+					if(Widgets.ButtonTextSubtle(icon, "Add new projectile"))
+					{ //if creating new projectile
+						List<FloatMenuOption> thingOptions = new List<FloatMenuOption>();
+						foreach (ThingDef def in selectedSupport.returnFireSupportOptions())
+						{
+							thingOptions.Add(new FloatMenuOption(def.LabelCap + " - " + Math.Round(def.BaseMarketValue * 1.5, 2).ToString(), delegate 
+							{
+								selectedSupport.projectiles.Add(def);
+							}, def));
+						}
+						if (thingOptions.Count() == 0)
+						{
+							thingOptions.Add(new FloatMenuOption("No available projectiles found", delegate { }));
+						}
+						Find.WindowStack.Add(new FloatMenu(thingOptions));
+					}
+				}
+				else
+				{ //if on row with projectile
+					Text.Anchor = TextAnchor.MiddleCenter;
+					Widgets.Label(text, i.ToString());
+					if(Widgets.ButtonTextSubtle(icon, ""))
+					{
+						List<FloatMenuOption> thingOptions = new List<FloatMenuOption>();
+						foreach (ThingDef def in selectedSupport.returnFireSupportOptions())
+						{
+							int k = i;
+							thingOptions.Add(new FloatMenuOption(def.LabelCap + " - " + Math.Round(def.BaseMarketValue * 1.5, 2).ToString(), delegate
+							{
+								selectedSupport.projectiles[k] = def;
+							}, def));
+						}
+						if (thingOptions.Count() == 0)
+						{
+							thingOptions.Add(new FloatMenuOption("No available projectiles found", delegate { }));
+						}
+						Find.WindowStack.Add(new FloatMenu(thingOptions));
+					}
+					Text.Anchor = TextAnchor.MiddleCenter;
+					Widgets.Label(cost, "$ " + (Math.Round(selectedSupport.projectiles[i].BaseMarketValue * 1.5, 2)).ToString());//ADD in future mod setting for firesupport cost
+
+					Widgets.DefLabelWithIcon(icon, selectedSupport.projectiles[i]);
+					if (Widgets.ButtonTextSubtle(options, "Options"))
+					{ //If clicked options button
+						int k = i;
+						List<FloatMenuOption> listOptions = new List<FloatMenuOption>();
+						listOptions.Add(new FloatMenuOption("Insert Projectile Above Slot", delegate 
+						{
+							List<FloatMenuOption> thingOptions = new List<FloatMenuOption>();
+							foreach (ThingDef def in selectedSupport.returnFireSupportOptions())
+							{
+								thingOptions.Add(new FloatMenuOption(def.LabelCap + " - " + Math.Round(def.BaseMarketValue*1.5, 2).ToString(), delegate
+								{
+									Log.Message("insert at " + k.ToString());
+									selectedSupport.projectiles.Insert(k, def);
+								}, def));
+							}
+							if (thingOptions.Count() == 0)
+							{
+								thingOptions.Add(new FloatMenuOption("No available projectiles found", delegate { }));
+							}
+							Find.WindowStack.Add(new FloatMenu(thingOptions));
+						}));
+						listOptions.Add(new FloatMenuOption("Duplicate", delegate
+						{
+							ThingDef tempDef = selectedSupport.projectiles[k];
+							List<FloatMenuOption> thingOptions = new List<FloatMenuOption>();
+
+							thingOptions.Add(new FloatMenuOption("1x", delegate
+								{
+									for (int l = 0; l < 1; l++)
+									{
+										if (k == selectedSupport.projectiles.Count() - 1)
+										{
+											selectedSupport.projectiles.Add(tempDef);
+										}
+										else
+										{
+											selectedSupport.projectiles.Insert(k + 1, tempDef);
+										}
+									}
+								}));
+							thingOptions.Add(new FloatMenuOption("5x", delegate
+							{
+								for (int l = 0; l < 5; l++)
+								{
+									if (k == selectedSupport.projectiles.Count() - 1)
+									{
+										selectedSupport.projectiles.Add(tempDef);
+									}
+									else
+									{
+										selectedSupport.projectiles.Insert(k + 1, tempDef);
+									}
+								}
+							}));
+							thingOptions.Add(new FloatMenuOption("10x", delegate
+							{
+								for (int l = 0; l < 10; l++)
+								{
+									if (k == selectedSupport.projectiles.Count() - 1)
+									{
+										selectedSupport.projectiles.Add(tempDef);
+									}
+									else
+									{
+										selectedSupport.projectiles.Insert(k + 1, tempDef);
+									}
+								}
+							}));
+							thingOptions.Add(new FloatMenuOption("20x", delegate
+							{
+								for (int l = 0; l < 20; l++)
+								{
+									if (k == selectedSupport.projectiles.Count() - 1)
+									{
+										selectedSupport.projectiles.Add(tempDef);
+									}
+									else
+									{
+										selectedSupport.projectiles.Insert(k + 1, tempDef);
+									}
+								}
+							}));
+							thingOptions.Add(new FloatMenuOption("50x", delegate
+							{
+								for (int l = 0; l < 50; l++)
+								{
+									if (k == selectedSupport.projectiles.Count() - 1)
+									{
+										selectedSupport.projectiles.Add(tempDef);
+									}
+									else
+									{
+										selectedSupport.projectiles.Insert(k + 1, tempDef);
+									}
+								}
+							}));
+							Find.WindowStack.Add(new FloatMenu(thingOptions));
+						}));
+						Find.WindowStack.Add(new FloatMenu(listOptions));
+						
+					}
+					if (Widgets.ButtonTextSubtle(upArrow, ""))
+					{ //if click up arrow button
+						if (i != 0)
+						{
+							ThingDef temp = selectedSupport.projectiles[i];
+							selectedSupport.projectiles[i] = selectedSupport.projectiles[i - 1];
+							selectedSupport.projectiles[i - 1] = temp;
+						}
+					}
+					Text.Anchor = TextAnchor.MiddleCenter;
+					Widgets.Label(upArrow, "^");
+					if (Widgets.ButtonTextSubtle(downArrow, ""))
+					{ //if click down arrow button
+						if (i != selectedSupport.projectiles.Count() - 1)
+						{
+							ThingDef temp = selectedSupport.projectiles[i];
+							selectedSupport.projectiles[i] = selectedSupport.projectiles[i + 1];
+							selectedSupport.projectiles[i + 1] = temp;
+						}
+					}
+					Text.Anchor = TextAnchor.MiddleCenter;
+					Widgets.Label(downArrow, "v");
+					if (Widgets.ButtonTextSubtle(delete, ""))
+					{ //if click delete  button
+						selectedSupport.projectiles.RemoveAt(i);
+					}
+					Text.Anchor = TextAnchor.MiddleCenter;
+					Widgets.Label(delete, "X");
+
+				}
+
+
+			}
+
+
+
+			//Reset Text anchor and font
+			Text.Font = fontBefore;
+			Text.Anchor = anchorBefore;
 		}
 
 

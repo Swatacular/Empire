@@ -76,6 +76,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Android-Tiers-Patches.cs" />
     <Compile Include="billFC.cs" />
     <Compile Include="BiomeResourceDef.cs" />
     <Compile Include="BuildingFC.cs" />
@@ -83,6 +84,7 @@
     <Compile Include="EmpireUI.cs" />
     <Compile Include="factionCustomizeWindowFC.cs" />
     <Compile Include="FactionFCDef.cs" />
+    <Compile Include="FactionRaceHarmonyPatches.cs" />
     <Compile Include="FCBillWindow.cs" />
     <Compile Include="FCBuildingWindow.cs" />
     <Compile Include="FCEvent.cs" />
@@ -94,6 +96,7 @@
     <Compile Include="FCPower.cs" />
     <Compile Include="FCPrisoner.cs" />
     <Compile Include="FCPrisonerMenu.cs" />
+    <Compile Include="FCRoadBuilder.cs" />
     <Compile Include="FCTraitEffectDef.cs" />
     <Compile Include="FC_Dialogue_Request.cs" />
     <Compile Include="listFactionPolicyFC.cs" />
@@ -101,6 +104,7 @@
     <Compile Include="listThingFC.cs" />
     <Compile Include="MainTabWindow_Colony.cs" />
     <Compile Include="Mercenary.cs" />
+    <Compile Include="MilitaryAI.cs" />
     <Compile Include="militaryCustomizationWindowFC.cs" />
     <Compile Include="PaymentUtil.cs" />
     <Compile Include="PolicyFCDef.cs" />
@@ -111,6 +115,7 @@
     <Compile Include="settlementUpgradeWindowFC.cs" />
     <Compile Include="settlementWindowFC.cs" />
     <Compile Include="simulateBattleFC.cs" />
+    <Compile Include="SoS2HarmonyPatches.cs" />
     <Compile Include="texLoad.cs" />
     <Compile Include="traitUtilFC.cs" />
     <Compile Include="traitWindowFC.cs" />

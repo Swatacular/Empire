@@ -281,23 +281,20 @@ namespace FactionColonies
 			List<Thing> things = new List<Thing>();
 			ThingSetMaker thingSetMaker = new ThingSetMaker_MarketValue();
 			ThingSetMakerParams param = new ThingSetMakerParams();
-			param.totalMarketValueRange = new FloatRange( 300 + (lootLevel*100), 100 + (lootLevel*500));
+			param.totalMarketValueRange = new FloatRange( 500 + (lootLevel*200), 1000 + (lootLevel*500));
 			param.filter = new ThingFilter();
 			param.techLevel = techLevel;
 			param.countRange = new IntRange(3, 20);
 
 			//set allow
-			param.filter.SetAllow(ThingCategoryDefOf.FoodMeals, true);
 			param.filter.SetAllow(ThingCategoryDefOf.Weapons, true);
 			param.filter.SetAllow(ThingCategoryDefOf.Apparel, true);
 			param.filter.SetAllow(ThingCategoryDefOf.BuildingsArt, true);
 			param.filter.SetAllow(ThingCategoryDefOf.Drugs, true);
 			param.filter.SetAllow(ThingCategoryDefOf.Items, true);
 			param.filter.SetAllow(ThingCategoryDefOf.Medicine, true);
-			param.filter.SetAllow(ThingCategoryDefOf.ResourcesRaw, true);
 			param.filter.SetAllow(ThingCategoryDefOf.Techprints, true);
 			param.filter.SetAllow(ThingCategoryDefOf.Buildings, true);
-			param.filter.SetAllow(StuffCategoryDefOf.Metallic, true);
 
 			//set disallow
 			param.filter.SetAllow(DefDatabase<ThingDef>.GetNamedSilentFail("Teachmat"), false);
@@ -306,39 +303,292 @@ namespace FactionColonies
 			return things;
 
 		}
+		public static void resetThingFilter(in FactionFC faction, int resourceID)
+		{
+			ThingFilter filter = faction.returnResourceByInt(resourceID).filter;
+			switch (resourceID)
+			{
+				case 0: //food
+					filter.SetAllow(ThingCategoryDefOf.FoodMeals, true);
+					break;
+				case 1: //weapons
+					filter.SetAllow(ThingCategoryDefOf.Weapons, true);
+					break;
+				case 2: //apparel
+					filter.SetAllow(ThingCategoryDefOf.Apparel, true);
+					break;
+				case 3: //animals
+					List<PawnKindDef> things = new List<PawnKindDef>();
+					List<PawnKindDef> allAnimalDefs = DefDatabase<PawnKindDef>.AllDefsListForReading;
 
-		public static List<Thing> generateTithe(double valueBase, double valueDiff, int multiplier, int resourceID, double traitValueMod )
+					foreach (PawnKindDef def in allAnimalDefs)
+					{
+						bool flag = def.race.race.Animal && def.RaceProps.IsFlesh && def.race.tradeTags != null && !def.race.tradeTags.Contains("AnimalMonster") && !def.race.tradeTags.Contains("AnimalGenetic") && !def.race.tradeTags.Contains("AnimalAlpha");
+						if (flag)
+						{
+							filter.SetAllow(def.race, true);
+						}
+					}
+					break;
+				case 4: //Logging
+					filter.SetAllow(ThingDefOf.WoodLog, true);
+					break;
+				case 5: //Mining
+					filter.SetAllow(StuffCategoryDefOf.Metallic, true);
+					filter.SetAllow(ThingDefOf.Silver, false);
+					//Android shit?
+					filter.SetAllow(DefDatabase<ThingDef>.GetNamedSilentFail("Teachmat"), false);
+					//Remove RimBees Beeswax
+					filter.SetAllow(DefDatabase<StuffCategoryDef>.GetNamedSilentFail("RB_Waxy"), false);
+					//Remove Alpha Animals skysteel
+					filter.SetAllow(DefDatabase<ThingDef>.GetNamedSilentFail("AA_SkySteel"), false);
+					break;
+				case 6: //research
+
+					break;
+				case 7: //Power
+					break;
+				case 8: //Medicine/Bionics
+					filter.SetAllow(ThingCategoryDefOf.Medicine, true);
+					filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsNatural"), true);
+					switch (faction.techLevel)
+					{
+						case TechLevel.Archotech:
+						case TechLevel.Ultra:
+							filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsUltra"), true);
+							filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsBionic"), true);
+							filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsProsthetic"), true);
+							filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsNatural"), true);
+
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses") != null)
+								filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("AdvancedProstheses") != null)
+								filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("AdvancedProstheses"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("SyntheticOrgans") != null)
+								filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("SyntheticOrgans"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("Neurotrainers") != null)
+								filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("Neurotrainers"), true);
+							break;
+						case TechLevel.Spacer:
+							filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsBionic"), true);
+							filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsProsthetic"), true);
+							filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsNatural"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses") != null)
+								filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("SyntheticOrgans") != null)
+								filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("SyntheticOrgans"), true);
+							break;
+						case TechLevel.Industrial:
+							filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsProsthetic"), true);
+							filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsNatural"), true);
+							break;
+						default:
+							break;
+					}
+					break;
+			}
+
+			switch (resourceID)
+			{
+				case 0: //food
+				case 1:
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+				case 8:
+					List<ThingDef> things = debugGenerateTithe(resourceID);
+					foreach (ThingDef thing in things)
+					{
+						FloatMenuOption option;
+						if (!FactionColonies.canCraftItem(thing))
+						{
+							filter.SetAllow(thing, false);
+						}
+					}
+					break;
+				default:
+					break;
+			}
+		}
+		public static void resetThingFilter(in SettlementFC settlement, int resourceID)
+		{
+			//Log.Message(resourceID.ToString());
+			FactionFC faction = Find.World.GetComponent<FactionFC>();
+			ThingFilter filter = settlement.returnResourceByInt(resourceID).filter;
+			switch (resourceID)
+			{
+				case 0: //food
+					filter.SetAllow(ThingCategoryDefOf.FoodMeals, true);
+					filter.SetAllow(ThingDefOf.Hay, true);
+					filter.SetAllow(ThingDefOf.Kibble, true);
+					break;
+				case 1: //weapons
+					filter.SetAllow(ThingCategoryDefOf.Weapons, true);
+					filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("MortarShells"), true);
+					if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("Ammo") != null)
+						filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("Ammo"), true);
+					break;
+				case 2: //apparel
+					filter.SetAllow(ThingCategoryDefOf.Apparel, true);
+					filter.SetAllow(ThingDefOf.Cloth, true);
+					if (FactionColonies.returnIsResearched(DefDatabase<ResearchProjectDef>.GetNamedSilentFail("Devilstrand")))
+					{
+						filter.SetAllow(DefDatabase<ThingDef>.GetNamedSilentFail("DevilstrandCloth"), true);
+					}
+					break;
+				case 3: //animals
+					List<PawnKindDef> things = new List<PawnKindDef>();
+					List<PawnKindDef> allAnimalDefs = DefDatabase<PawnKindDef>.AllDefsListForReading;
+
+					foreach (PawnKindDef def in allAnimalDefs)
+					{
+						bool flag = def.race.race.Animal && def.RaceProps.IsFlesh && def.race.tradeTags != null && !def.race.tradeTags.Contains("AnimalMonster") && !def.race.tradeTags.Contains("AnimalGenetic") && !def.race.tradeTags.Contains("AnimalAlpha");
+						if (flag)
+						{
+							filter.SetAllow(def.race, true);
+						}
+					}
+					break;
+				case 4: //Logging
+					filter.SetAllow(ThingDefOf.WoodLog, true);
+					filter.SetAllow(StuffCategoryDefOf.Woody, true);
+					break;
+				case 5: //Mining
+					filter.SetAllow(StuffCategoryDefOf.Metallic, true);
+					filter.SetAllow(ThingDefOf.Silver, false);
+					//Android shit?
+					filter.SetAllow(DefDatabase<ThingDef>.GetNamedSilentFail("Teachmat"), false);
+					//Remove RimBees Beeswax
+					filter.SetAllow(DefDatabase<StuffCategoryDef>.GetNamedSilentFail("RB_Waxy"), false);
+					//Remove Alpha Animals skysteel
+					filter.SetAllow(DefDatabase<ThingDef>.GetNamedSilentFail("AA_SkySteel"), false);
+					filter.SetAllow(ThingDefOf.ComponentIndustrial, true);
+					filter.SetAllow(ThingCategoryDefOf.StoneBlocks, true);
+					break;
+				case 6: //research
+
+					break;
+				case 7: //Power
+					break;
+				case 8: //Medicine/Bionics
+					filter.SetAllow(ThingCategoryDefOf.Medicine, true);
+					filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsNatural"), true);
+					switch (faction.techLevel)
+					{
+						case TechLevel.Archotech:
+						case TechLevel.Ultra:
+							filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsUltra"), true);
+							filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsBionic"), true);
+							filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsProsthetic"), true);
+							filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsNatural"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses") != null)
+								filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("SyntheticOrgans") != null)
+								filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("SyntheticOrgans"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses") != null)
+								filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("AdvancedProstheses") != null)
+								filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("AdvancedProstheses"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("SyntheticOrgans") != null)
+								filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("SyntheticOrgans"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("Neurotrainers") != null)
+								filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("Neurotrainers"), true);
+
+							break;
+						case TechLevel.Spacer:
+							filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsBionic"), true);
+							filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsProsthetic"), true);
+							filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsNatural"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses") != null)
+								filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("SyntheticOrgans") != null)
+								filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("SyntheticOrgans"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses") != null)
+								filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("AdvancedProstheses") != null)
+								filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("AdvancedProstheses"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("SyntheticOrgans") != null)
+								filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("SyntheticOrgans"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("Neurotrainers") != null)
+								filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("Neurotrainers"), true);
+							break;
+						case TechLevel.Industrial:
+							filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsProsthetic"), true);
+							filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsNatural"), true);
+							filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsBionic"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses") != null)
+								filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses"), true);
+							break;
+						default:
+							break;
+					}
+					break;
+			}
+
+			switch (resourceID)
+			{
+				case 0: //food
+				case 1:
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+				case 8:
+					List<ThingDef> things = debugGenerateTithe(resourceID);
+					foreach (ThingDef thing in things)
+					{
+						FloatMenuOption option;
+						if (!FactionColonies.canCraftItem(thing))
+						{
+							filter.SetAllow(thing, false);
+						}
+					}
+					break;
+				default:
+					break;
+			}
+		}
+
+		public static List<ThingDef> debugGenerateTithe(int resourceID)
 		{
 			FactionFC faction = Find.World.GetComponent<FactionFC>();
-			List <Thing> things = new List<Thing>();
-			ThingSetMaker thingSetMaker = new ThingSetMaker_MarketValue();
+			ThingSetMaker thingSetMaker = new ThingSetMaker_Count();
+			List<ThingDef> things = new List<ThingDef>();
+
 			ThingSetMakerParams param = new ThingSetMakerParams();
-			param.totalMarketValueRange = new FloatRange((float)((valueBase* LoadedModManager.GetMod<FactionColoniesMod>().GetSettings<FactionColonies>().silverPerResource )- ((valueDiff + traitValueMod) *multiplier)), (float)((valueBase * LoadedModManager.GetMod<FactionColoniesMod>().GetSettings<FactionColonies>().silverPerResource) + ((valueDiff + traitValueMod) * multiplier)));
 			param.filter = new ThingFilter();
-			param.techLevel = FactionColonies.getPlayerColonyFaction().def.techLevel;
+			param.techLevel = faction.techLevel;
+			param.countRange = new IntRange(1, 1);
 
 			switch (resourceID)
 			{
 				case 0: //food
 					param.filter.SetAllow(ThingCategoryDefOf.FoodMeals, true);
-					param.countRange = new IntRange(1, 5+multiplier);
+					param.filter.SetAllow(ThingDefOf.Hay, true);
+					param.filter.SetAllow(ThingDefOf.Kibble, true);
 					break;
 				case 1: //weapons
 					param.filter.SetAllow(ThingCategoryDefOf.Weapons, true);
-					param.countRange = new IntRange(1, 4+(2*multiplier));
+					param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("MortarShells"), true);
+					if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("Ammo") != null)
+						param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("Ammo"), true);
 					break;
 				case 2: //apparel
 					param.filter.SetAllow(ThingCategoryDefOf.Apparel, true);
-					param.countRange = new IntRange(1, 4+ (3*multiplier));
+					param.filter.SetAllow(ThingDefOf.Cloth, true);
+					if (FactionColonies.returnIsResearched(DefDatabase<ResearchProjectDef>.GetNamedSilentFail("Devilstrand")))
+					{
+						param.filter.SetAllow(DefDatabase<ThingDef>.GetNamedSilentFail("DevilstrandCloth"), true);
+					}
 					break;
 				case 3: //animals
-					thingSetMaker = new ThingSetMaker_Animals();
+					thingSetMaker = new ThingSetMaker_Animal();
 					param.techLevel = TechLevel.Undefined;
-					//param.countRange = new IntRange(1,4);
 					break;
 				case 4: //Logging
 					param.filter.SetAllow(ThingDefOf.WoodLog, true);
-					param.countRange = new IntRange(1, 5*multiplier);
+					param.filter.SetAllow(StuffCategoryDefOf.Woody, true);
 					break;
 				case 5: //Mining
 					param.filter.SetAllow(StuffCategoryDefOf.Metallic, true);
@@ -349,7 +599,9 @@ namespace FactionColonies
 					param.filter.SetAllow(DefDatabase<StuffCategoryDef>.GetNamedSilentFail("RB_Waxy"), false);
 					//Remove Alpha Animals skysteel
 					param.filter.SetAllow(DefDatabase<ThingDef>.GetNamedSilentFail("AA_SkySteel"), false);
-					param.countRange = new IntRange(1, 4*multiplier);
+					param.filter.SetAllow(ThingDefOf.ComponentIndustrial, true);
+					param.filter.SetAllow(ThingCategoryDefOf.StoneBlocks, true);
+
 					break;
 				case 6: //research
 					Log.Message("generateTithe - Research Tithe - How did you get here?");
@@ -369,15 +621,19 @@ namespace FactionColonies
 							param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsBionic"), true);
 							param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsProsthetic"), true);
 							param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsNatural"), true);
-
 							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses") != null)
-							param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses"), true);
+								param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("SyntheticOrgans") != null)
+								param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("SyntheticOrgans"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses") != null)
+								param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses"), true);
 							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("AdvancedProstheses") != null)
 								param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("AdvancedProstheses"), true);
 							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("SyntheticOrgans") != null)
 								param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("SyntheticOrgans"), true);
 							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("Neurotrainers") != null)
 								param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("Neurotrainers"), true);
+
 							break;
 						case TechLevel.Spacer:
 							param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsBionic"), true);
@@ -387,17 +643,75 @@ namespace FactionColonies
 								param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses"), true);
 							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("SyntheticOrgans") != null)
 								param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("SyntheticOrgans"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses") != null)
+								param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("AdvancedProstheses") != null)
+								param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("AdvancedProstheses"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("SyntheticOrgans") != null)
+								param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("SyntheticOrgans"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("Neurotrainers") != null)
+								param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("Neurotrainers"), true);
 							break;
 						case TechLevel.Industrial:
 							param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsProsthetic"), true);
 							param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsNatural"), true);
+							param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BodyPartsBionic"), true);
+							if (DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses") != null)
+								param.filter.SetAllow(DefDatabase<ThingCategoryDef>.GetNamedSilentFail("BionicProstheses"), true);
 							break;
 						default:
 							break;
 					}
+					break;
+			}
+			things = thingSetMaker.AllGeneratableThingsDebug(param).ToList();
 
-					
+			return things;
+		}
 
+
+
+		public static List<Thing> generateTithe(double valueBase, double valueDiff, int multiplier, int resourceID, double traitValueMod, SettlementFC settlement)
+		{
+			FactionFC faction = Find.World.GetComponent<FactionFC>();
+			List <Thing> things = new List<Thing>();
+			ThingSetMaker thingSetMaker = new ThingSetMaker_MarketValue();
+			ThingSetMakerParams param = new ThingSetMakerParams();
+			param.totalMarketValueRange = new FloatRange((float)((valueBase)- ((valueDiff + traitValueMod))), (float)((valueBase + ((valueDiff + traitValueMod) * multiplier))));
+			param.filter = settlement.returnResourceByInt(resourceID).filter;
+			param.techLevel = FactionColonies.getPlayerColonyFaction().def.techLevel;
+
+
+			switch (resourceID)
+			{
+				case 0: //food
+					param.countRange = new IntRange(1, 5+multiplier);
+					break;
+				case 1: //weapons
+					param.countRange = new IntRange(1, 4+(2*multiplier));
+					break;
+				case 2: //apparel
+					param.countRange = new IntRange(1, 4+ (3*multiplier));
+					break;
+				case 3: //animals
+					thingSetMaker = new ThingSetMaker_Animals();
+					param.techLevel = TechLevel.Undefined;
+					//param.countRange = new IntRange(1,4);
+					break;
+				case 4: //Logging
+					param.countRange = new IntRange(1, 5*multiplier);
+					break;
+				case 5: //Mining
+					param.countRange = new IntRange(1, 4*multiplier);
+					break;
+				case 6: //research
+					Log.Message("generateTithe - Research Tithe - How did you get here?");
+
+					break;
+				case 7: //Power
+					Log.Message("generateTithe - Power Tithe - How did you get here?");
+					break;
+				case 8: //Medicine/Bionics
 					param.countRange = new IntRange(1, 2 * multiplier);
 					break;
 			}
@@ -528,7 +842,7 @@ namespace FactionColonies
 			int value = 0;
 			foreach (PawnKindDef def in allAnimalDefs)
 			{
-				if (def.race.race.Animal && def.RaceProps.IsFlesh && def.race.BaseMarketValue != 0 && def.race.tradeTags != null && !def.race.tradeTags.Contains("AnimalMonster") && !def.race.tradeTags.Contains("AnimalGenetic") && !def.race.tradeTags.Contains("AnimalAlpha"))
+				if (parms.filter.Allows(def.race) && def.race.race.Animal && def.RaceProps.IsFlesh && def.race.BaseMarketValue != 0 && def.race.tradeTags != null && !def.race.tradeTags.Contains("AnimalMonster") && !def.race.tradeTags.Contains("AnimalGenetic") && !def.race.tradeTags.Contains("AnimalAlpha"))
 				{
 					things.Add(def);
 				}
@@ -566,10 +880,31 @@ namespace FactionColonies
 
 			}
 		}
+
+		static List<PawnKindDef> allowedGeneratedList()
+		{
+			List<PawnKindDef> things = new List<PawnKindDef>();
+			List<PawnKindDef> allAnimalDefs = DefDatabase<PawnKindDef>.AllDefsListForReading;
+
+			foreach (PawnKindDef def in allAnimalDefs)
+			{
+				bool flag = def.race.race.Animal && def.RaceProps.IsFlesh && def.race.tradeTags != null && !def.race.tradeTags.Contains("AnimalMonster") && !def.race.tradeTags.Contains("AnimalGenetic") && !def.race.tradeTags.Contains("AnimalAlpha");
+				if (flag)
+				{
+					things.Add(def);
+				}
+			}
+			return things;
+		}
 		protected override IEnumerable<ThingDef> AllGeneratableThingsDebugSub(ThingSetMakerParams parms)
 		{
-			yield return null;
-			yield break;
+			List<ThingDef> list = new List<ThingDef>();
+			foreach (PawnKindDef def in ThingSetMaker_Animals.allowedGeneratedList())
+			{
+				list.Add((def.race));
+			}
+
+			return list;
 		}
 	}
 
@@ -589,9 +924,9 @@ namespace FactionColonies
 				}
 			}
 
-			regen:
-				PawnGenerationRequest request = new PawnGenerationRequest(things.RandomElement<PawnKindDef>(), Find.FactionManager.OfPlayer, PawnGenerationContext.NonPlayer, -1, false, false, false, false, true, false, 1f, false, true, true, false, false, false, false, true, 0, null, 1, null, null, null, null);
-				Pawn pawn = PawnGenerator.GeneratePawn(request);
+		regen:
+			PawnGenerationRequest request = new PawnGenerationRequest(things.RandomElement<PawnKindDef>(), Find.FactionManager.OfPlayer, PawnGenerationContext.NonPlayer, -1, false, false, false, false, true, false, 1f, false, true, true, false, false, false, false, true, 0, null, 1, null, null, null, null);
+			Pawn pawn = PawnGenerator.GeneratePawn(request);
 
 
 			if (pawn.MarketValue > parms.totalMarketValueRange.Value.max)
@@ -599,14 +934,36 @@ namespace FactionColonies
 				goto regen;
 			}
 			outThings.Add(pawn);
-		
+
 		}
 
 
+
+		static List<PawnKindDef> allowedGeneratedList()
+		{
+			List<PawnKindDef> things = new List<PawnKindDef>();
+			List<PawnKindDef> allAnimalDefs = DefDatabase<PawnKindDef>.AllDefsListForReading;
+
+			foreach (PawnKindDef def in allAnimalDefs)
+			{
+				bool flag = def.race.race.Animal && def.RaceProps.IsFlesh && def.race.tradeTags != null && !def.race.tradeTags.Contains("AnimalMonster") && !def.race.tradeTags.Contains("AnimalGenetic") && !def.race.tradeTags.Contains("AnimalAlpha");
+				if (flag)
+				{
+					things.Add(def);
+				}
+			}
+			return things;
+		}
+
 		protected override IEnumerable<ThingDef> AllGeneratableThingsDebugSub(ThingSetMakerParams parms)
 		{
-			yield return PawnKindDefOf.Thrumbo.race;
-			yield break;
+			List<ThingDef> list = new List<ThingDef>();
+			foreach (PawnKindDef def in ThingSetMaker_Animal.allowedGeneratedList())
+			{
+				list.Add((def.race));
+			}
+
+			return list;
 		}
 	}
 

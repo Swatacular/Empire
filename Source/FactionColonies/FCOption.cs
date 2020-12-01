@@ -79,7 +79,7 @@ namespace FactionColonies
 
 		public FCOptionWindow(FCEventDef evt, FCEvent parentEvent)
 		{
-			this.forcePause = true;
+			this.forcePause = !FactionColonies.Settings().disableForcedPausingDuringEvents;
 			this.draggable = true;
 			this.doCloseX = false;
 			this.preventCameraMotion = false;

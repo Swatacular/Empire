@@ -96,7 +96,7 @@ namespace FactionColonies
 			//3 Silver (- || +)
 			//4 tithe
 
-			List<String> headerList = new List<String>() { "Name".Translate(), "StackCount".Translate(), "MarketValue".Translate(), "TotalValue".Translate() };
+			List<String> headerList = new List<String>() { "Name".Translate(), "StackCount".Translate(), "MarketValue".Translate(), "FCTotalValue".Translate() };
 			for (int i = 0; i < 4; i++)  //-2 to exclude location and ID
 			{
 				if (i == 0)

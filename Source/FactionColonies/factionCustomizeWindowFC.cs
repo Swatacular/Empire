@@ -38,6 +38,8 @@ namespace FactionColonies
 
 		private string name;
 		private string title;
+		private Texture2D tempFactionIcon;
+		private string tempFactionIconPath;
 
 
 
@@ -51,6 +53,9 @@ namespace FactionColonies
 			this.header = "CustomizeFaction".Translate();
 			this.name = faction.name;
 			this.title = faction.title;
+
+			this.tempFactionIcon = faction.factionIcon;
+			this.tempFactionIconPath = faction.factionIconPath;
 		}
 
 		public override void PreOpen()
@@ -93,7 +98,7 @@ namespace FactionColonies
 
 
 			Text.Font = GameFont.Small;
-			for (int i = 0; i < 3; i++) //for each field to customize
+			for (int i = 0; i < 4; i++) //for each field to customize
 			{
 				switch (i)
 				{
@@ -109,9 +114,68 @@ namespace FactionColonies
 
 					case 2: //faction icon
 						Widgets.Label(new Rect(xoffset + 3, yoffset + yspacing * i, length / 4, yspacing), "FactionIcon".Translate() + ": ");
-						if(Widgets.ButtonImage(new Rect(xoffset + 3 + length / 4 + 5, yoffset + yspacing * i, 40, 40), texLoad.iconUnrest))  //change to faction icon
+						if(Widgets.ButtonImage(new Rect(xoffset + 3 + length / 4 + 5, yoffset + yspacing * i, 40, 40), tempFactionIcon))  //change to faction icon
 						{
-							Messages.Message("ButtonNotAvailable".Translate() + ".", MessageTypeDefOf.CautionInput);
+							List<FloatMenuOption> list = new List<FloatMenuOption>();
+							foreach (KeyValuePair<string, Texture2D> pair in texLoad.factionIcons)
+							{
+								list.Add(new FloatMenuOption(pair.Key, delegate
+								{
+									tempFactionIcon = pair.Value;
+									tempFactionIconPath = pair.Key;
+								},pair.Value, Color.white));
+							}
+							FloatMenu menu = new FloatMenu(list);
+							Find.WindowStack.Add(menu);
+
+							//Messages.Message("ButtonNotAvailable".Translate() + ".", MessageTypeDefOf.CautionInput);
+							//Log.Message("Faction icon select pressed");
+							//Open window to select new icon
+						}
+						break;
+					case 3:
+						if (Widgets.ButtonTextSubtle(new Rect(xoffset + 3 + length / 4 + 5, yoffset + yspacing * i + 15, length / 2, yspacing), "AllowedRaces".Translate()))  //change to faction icon
+						{
+							List<string> races = new List<string>();
+							List<FloatMenuOption> list = new List<FloatMenuOption>();
+							list.Add(new FloatMenuOption("Enable All", delegate { faction.resetRaceFilter(); }));
+							foreach (PawnKindDef def in DefDatabase<PawnKindDef>.AllDefsListForReading)
+							{
+								if (def.race.race.intelligence == Intelligence.Humanlike & races.Contains(def.race.label) == false && def.race.BaseMarketValue != 0)
+								{
+									if (def.race.label == "Human" && def.LabelCap != "Colonist")
+									{
+
+									}
+									else
+									{
+
+										races.Add(def.race.label);
+										list.Add(new FloatMenuOption(def.race.label.CapitalizeFirst() + " - Allowed: " + faction.raceFilter.Allows(def.race), delegate
+										{
+											if (faction.raceFilter.AllowedThingDefs.Count() == 1 && faction.raceFilter.Allows(def.race) == true)
+											{
+												Messages.Message("CannotHaveLessThanOneRace".Translate(), MessageTypeDefOf.RejectInput);
+											}
+											else if (faction.raceFilter.AllowedThingDefs.Count() > 1)
+											{
+
+												faction.raceFilter.SetAllow(def.race, !faction.raceFilter.Allows(def.race));
+											} else
+											{
+												Log.Message("Empire Error - Zero races available for faction - Report this");
+												Log.Message("Reseting race filter");
+												faction.resetRaceFilter();
+											}
+										}));
+
+									}
+								}
+							}
+							FloatMenu menu = new FloatMenu(list);
+							Find.WindowStack.Add(menu);
+
+							//Messages.Message("ButtonNotAvailable".Translate() + ".", MessageTypeDefOf.CautionInput);
 							//Log.Message("Faction icon select pressed");
 							//Open window to select new icon
 						}
@@ -121,10 +185,19 @@ namespace FactionColonies
 
 			if(Widgets.ButtonText(new Rect((InitialSize.x-120-18)/2,yoffset + InitialSize.y - 120,120,30), "ConfirmChanges".Translate()))
 			{
+				Faction fact = FactionColonies.getPlayerColonyFaction();
+				FactionFC component = Find.World.GetComponent<FactionFC>();
 				faction.title = title;
 				faction.name = name;
-				FactionColonies.getPlayerColonyFaction().Name = name;
-				Find.World.GetComponent<FactionFC>().name = name;
+				fact.Name = name;
+				component.name = name;
+				component.factionIconPath = tempFactionIconPath;
+				component.factionIcon = tempFactionIcon;
+				component.updateFactionRaces();
+				component.factionBackup = fact;
+				
+				faction.updateFactionIcon(ref fact, "FactionIcons/" + tempFactionIconPath);
+				Find.LetterStack.ReceiveLetter("Note on Faction Icon", "Note: The faction icon on the world map will only update after a full restart of your game. Or pure luck.", LetterDefOf.NeutralEvent);
 				Find.WindowStack.TryRemove(this);
 			}
 
@@ -141,7 +214,7 @@ namespace FactionColonies
 
 
 			Widgets.Label(new Rect(xoffset + 2, yoffset - yspacing + 2, length - 4, height - 4 + yspacing * 2), desc);
-			Widgets.DrawBox(new Rect(xoffset, yoffset - yspacing, length, height - yspacing * 2));
+			Widgets.DrawBox(new Rect(xoffset, yoffset - yspacing, length, height - yspacing));
 
 			//reset anchor/font
 			Text.Font = fontBefore;

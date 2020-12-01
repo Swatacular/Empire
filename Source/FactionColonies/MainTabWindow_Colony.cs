@@ -49,7 +49,7 @@ namespace FactionColonies
 
 		public List<string> stats_tab_0 = new List<string> {"happiness", "loyalty", "unrest", "prosperity"};
 
-		public List<string> buttons_tab_0 = new List<string> { "Policies-Traits".Translate(), "Military".Translate(), "Actions".Translate() };
+		public List<string> buttons_tab_0 = new List<string> { "Policies-Traits".Translate(), "Military".Translate(), "Actions".Translate()};
 
 
 		public override void PostOpen()
@@ -65,22 +65,29 @@ namespace FactionColonies
 			buttons = buttons_tab_0;
 			resourceSize = 40;
 			faction = Find.World.GetComponent<FactionFC>();
-			settlementList = faction.settlements;
-			faction.updateAverages();
+			if (faction != null)
+			{
+				settlementList = faction.settlements;
+				faction.updateAverages();
 
-			//Initial release - Autocreate faction
-			//Faction faction = FactionColonies.getPlayerColonyFaction();
-			//if (faction == null)
-			//{
-			//	FactionColonies.createPlayerColonyFaction();
-			//}
+				//Initial release - Autocreate faction
+				//Faction faction = FactionColonies.getPlayerColonyFaction();
+				//if (faction == null)
+				//{
+				//	FactionColonies.createPlayerColonyFaction();
+				//}
 
-			//if (faction.capitalLocation == -1)
-			//{
-			//	faction.setCapital();
-			//}
+				//if (faction.capitalLocation == -1)
+				//{
+				//	faction.setCapital();
+				//}
 
 				faction.updateTotalProfit();
+			}
+			else
+			{
+				Log.Message("WorldComp FactionFC is null - Something is wrong! Empire Mod");
+			}
 			
 		}
 
@@ -107,6 +114,8 @@ namespace FactionColonies
 		{
 			faction.updateAverages();
 			maxScroll = (settlementList.Count() * yspacing) - 264;
+
+
 		}
 
 
@@ -217,9 +226,13 @@ namespace FactionColonies
 				if (Widgets.ButtonText(button, "Create New Faction"))
 				{ 
 					FactionColonies.createPlayerColonyFaction();
+					faction.factionCreated = true;
 					Find.WindowStack.Add(new factionCustomizeWindowFC(faction));
 					//Initial release - Autocreate faction
-					Messages.Message(Find.WorldObjects.SettlementAt(Find.CurrentMap.Parent.Tile).Name + " " + "SetAsFactionCapital".Translate() + "!", MessageTypeDefOf.NeutralEvent);
+					if (Find.CurrentMap.Parent != null && Find.CurrentMap.Parent.Tile != null && Find.WorldObjects.SettlementAt(Find.CurrentMap.Parent.Tile) != null)
+					{
+						Messages.Message(Find.WorldObjects.SettlementAt(Find.CurrentMap.Parent.Tile).Name + " " + "SetAsFactionCapital".Translate() + "!", MessageTypeDefOf.NeutralEvent);
+					}
 
 				}
 			}
@@ -247,6 +260,10 @@ namespace FactionColonies
 				tab = 1;
 				scroll = 0;
 				maxScroll = (settlementList.Count() * yspacing)-264;
+				foreach (SettlementFC settlement in faction.settlements)
+				{
+					settlement.updateProfitAndProduction();
+				}
 			}
 		}
 		private void DrawTabReports(Rect inRect)
@@ -301,17 +318,65 @@ namespace FactionColonies
 			//list[6] = mapLocation.ToString(); //settlement location
 			//list[7] = ID
 
-			List<String> headerList = new List<String>() {"Settlement".Translate(), "ColonyLevel".Translate(), "MilitaryLevel".Translate(), "Unrest".Translate(), "Loyalty".Translate(), "Profit".Translate(), "Location", "ID" };
+			List<String> headerList = new List<String>() {"Settlement".Translate(), "Level".Translate(), "FreeWorkers".Translate(), "Unrest".Translate(), "Loyalty".Translate(), "Profit".Translate(), "Location", "ID" };
+			int adjust2 = 0;
+
+			
+			Action method = delegate{ };
+
+			
 			for (int i = 0; i < headerList.Count()-2; i++)  //-2 to exclude location and ID
 			{
+				int xspacingUpdated;
+				GUIContent varString;
+				switch (i)
+				{
+					case 0:
+						xspacingUpdated = xspacing + headerSpacing;
+						method = delegate { settlementList.Sort(FactionColonies.CompareSettlementName); };
+						break;
+					case 1:
+						xspacingUpdated = xspacing - 10;
+						method = delegate { settlementList.Sort(FactionColonies.CompareSettlementLevel); };
+						break;
+					case 2:
+						xspacingUpdated = xspacing;
+						method = delegate { settlementList.Sort(FactionColonies.CompareSettlementFreeWorkers); };
+						break;
+					case 3:
+						xspacingUpdated = xspacing - 4;
+						method = delegate { settlementList.Sort(FactionColonies.CompareSettlementUnrest); };
+						break;
+					case 4:
+						xspacingUpdated = xspacing;
+						method = delegate { settlementList.Sort(FactionColonies.CompareSettlementLoyalty); };
+						break;
+					case 5:
+						xspacingUpdated = xspacing + 14;
+						method = delegate { settlementList.Sort(FactionColonies.CompareSettlementProfit); };
+						break;
+					default:
+						varString = new GUIContent("ERROR");
+						xspacingUpdated = xspacing;
+						break;
+				}
 				if (i == 0)
 				{
-					Widgets.Label(new Rect(2 + i * xspacing, 60, xspacing+headerSpacing, 30), headerList[i]);
+					Widgets.Label(new Rect(2 + adjust2, 60, xspacingUpdated, 40), headerList[i]);
+					if (Widgets.ButtonInvisible(new Rect(2 + adjust2, 60, xspacingUpdated, 40)))
+					{
+						method.Invoke();
+					}
 				}
 				else
 				{
-					Widgets.Label(new Rect(headerSpacing+2 + i * xspacing, 60, xspacing, 30), headerList[i]);
+					Widgets.Label(new Rect(2 + adjust2, 60, xspacingUpdated, 40), headerList[i]);
+					if (Widgets.ButtonInvisible(new Rect(2 + adjust2, 60, xspacingUpdated, 40)))
+					{
+						method.Invoke();
+					}
 				}
+				adjust2 += xspacingUpdated;
 			}
 
 			for (int i = 0; i < settlementList.Count(); i++) //browse through list.  settlementList[i] = a settlement
@@ -323,46 +388,60 @@ namespace FactionColonies
 					{
 						Widgets.DrawHighlight(new Rect(0, yoffset + i * yspacing + scroll, 312, 30));
 					}
+					int adjust = 0;
 					for (int k = 0; k < 6; k++)  //Browse through settlement information    -2 to exclude location and ID
 					{
+						int xspacingUpdated;
+						GUIContent varString;
+						switch (k)
+						{
+							case 0:
+								varString = new GUIContent(settlement.name);
+								xspacingUpdated = xspacing + headerSpacing;
+								break;
+							case 1:
+								varString = new GUIContent(settlement.settlementLevel.ToString());
+								xspacingUpdated = xspacing - 10;
+								break;
+							case 2:
+								varString = new GUIContent((settlement.workersUltraMax - settlement.getTotalWorkers()).ToString());
+								xspacingUpdated = xspacing - 14;
+								break;
+							case 3:
+								varString = new GUIContent(settlement.unrest.ToString(), texLoad.iconUnrest);
+								xspacingUpdated = xspacing + 4;
+								break;
+							case 4:
+								varString = new GUIContent(settlement.loyalty.ToString(), texLoad.iconLoyalty);
+								xspacingUpdated = xspacing;
+								break;
+							case 5:
+								varString = new GUIContent(settlement.totalProfit.ToString(), settlement.returnHighestResource().getIcon());
+								xspacingUpdated = xspacing + 20;
+								break;
+							default:
+								varString = new GUIContent("ERROR");
+								xspacingUpdated = xspacing;
+								break;
+						}
+						
 						if (k == 0)
 						{
-							if(Widgets.ButtonText(new Rect(2 + k * xspacing, yoffset + i * yspacing + scroll, xspacing + headerSpacing, 30), ""))
+							if(Widgets.ButtonText(new Rect(2 + adjust, yoffset + i * yspacing + scroll, xspacingUpdated, 30), ""))
 							{  //When button of settlement name is pressed
 							   //Log.Message(settlementList[i][k] + " Pressed!");
 								faction.settlements[i].updateProfitAndProduction();
 								Find.WindowStack.Add(new settlementWindowFC(settlement));
 
 							}
-							Widgets.Label(new Rect(2 + k * xspacing, yoffset + i * yspacing + scroll, xspacing + headerSpacing, 30), settlement.name);
+							Widgets.Label(new Rect(2 + adjust, yoffset + i * yspacing + scroll, xspacingUpdated, 30), settlement.name);
 						}
 						else
 						{
-							string str;
-							switch (k)
-							{
-								case 0:
-									str = settlement.name;
-									break;
-								case 1:
-									str = settlement.settlementLevel.ToString();
-									break;
-								case 2:
-									str = settlement.settlementMilitaryLevel.ToString();
-									break;
-								case 3:
-									str = settlement.unrest.ToString();
-									break;
-								case 4:
-									str = settlement.loyalty.ToString();
-									break;
-								case 5:
-									str = settlement.totalProfit.ToString();
-									break;
-								default:
-									str = "ERROR";
-									break;
-							}
+							
+							
+
+							Widgets.Label(new Rect(2 + adjust, yoffset + i * yspacing + scroll, xspacingUpdated, 30), varString);
 
 							//ist[0] = name;   //settlement name
 							//list[1] = settlementLevel.ToString(); //settlement level
@@ -372,8 +451,9 @@ namespace FactionColonies
 							//list[5] = getTotalProfit().ToString(); //settlement profit
 							//list[6] = mapLocation.ToString(); //settlement location
 							//list[7] = ID
-							Widgets.Label(new Rect(headerSpacing + 2 + k * xspacing, yoffset + i * yspacing + scroll, xspacing, 30), str);
+							//Widgets.Label(new Rect(headerSpacing + 2 + k * xspacing, yoffset + i * yspacing + scroll, xspacing, 30), varString);
 						}
+						adjust += xspacingUpdated;
 					}
 				}
 			}
@@ -390,7 +470,11 @@ namespace FactionColonies
 			if(Widgets.ButtonImage(new Rect(210, 37, 20, 20), texLoad.iconCustomize))
 			{ //if click faction customize button
 			  //Log.Message("Faction customize clicked");
-				Find.WindowStack.Add(new factionCustomizeWindowFC(faction));
+				Faction fact = FactionColonies.getPlayerColonyFaction();
+				if (fact != null)
+					Find.WindowStack.Add(new factionCustomizeWindowFC(faction));
+				else
+					Messages.Message("No faction created to customize", MessageTypeDefOf.RejectInput);
 			}
 		}
 		private void DrawFactionTitle(Rect inRect)
@@ -402,7 +486,7 @@ namespace FactionColonies
 
 		private void DrawFactionIcon(Rect inRect)
 		{
-			Widgets.ButtonImage(new Rect(245, 40, 50, 50), texLoad.iconTest100);
+			Widgets.ButtonImage(new Rect(245, 40, 50, 50), faction.factionIcon);
 			
 		}
 
@@ -555,6 +639,10 @@ namespace FactionColonies
 							faction.updateDailyResearch();
 						}));
 
+						list.Add(new FloatMenuOption("ResearchLevel".Translate(), delegate
+						{
+							Messages.Message(TranslatorFormattedStringExtensions.Translate("CurrentResearchLevel", faction.techLevel.ToString(), faction.returnNextTechToLevel()), MessageTypeDefOf.NeutralEvent);
+						}));
 
 
 						FloatMenu menu = new FloatMenu(list);

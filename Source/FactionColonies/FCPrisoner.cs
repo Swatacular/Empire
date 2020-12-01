@@ -57,7 +57,7 @@ namespace FactionColonies
             Scribe_Values.Look<bool>(ref isReturning, "isReturning");
             Scribe_Values.Look<int>(ref loadID, "loadID");
             Scribe_Values.Look<FCWorkLoad>(ref workload, "workload");
-            Scribe_Deep.Look<Pawn_HealthTracker>(ref healthTracker, "healthTracker");
+            Scribe_Deep.Look<Pawn_HealthTracker>(ref healthTracker, "healthTracker", new object[] { this.prisoner });
         }
 
 

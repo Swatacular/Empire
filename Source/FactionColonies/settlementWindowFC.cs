@@ -16,7 +16,7 @@ namespace FactionColonies
 		{
 			get
 			{
-				return new Vector2(1000f, 545f);
+				return new Vector2(1055f, 545f);
 			}
 		}
 
@@ -76,7 +76,7 @@ namespace FactionColonies
 		}
 
 		private List<string> stats = new List<string>() {"militaryLevel","happiness","loyalty","unrest","prosperity"};
-		private List<string> buttons = new List<string>() { "DeleteSettlement".Translate(), "UpgradeTown".Translate(), "GoToLocation".Translate(), "PrisonersMenu".Translate() };
+		private List<string> buttons = new List<string>() { "DeleteSettlement".Translate(), "UpgradeTown".Translate(), "GoToLocation".Translate(), "PrisonersMenu".Translate(), "Military".Translate() };
 		//private List<string> productionButtons = new List<string>() { "Collect Tithe", "View Tithe" };
 
 		public SettlementFC settlement;  //Don't expose
@@ -107,7 +107,7 @@ namespace FactionColonies
 			DrawHeader();
 			DrawSettlementStats(0, 80);
 			//set 1 = settlement, set 2 = production
-			DrawButtons(370, 336, 145, 30, 1);
+			DrawButtons(370, 336, 145, 25, 1);
 
 			if (settlement != null)
 			{
@@ -123,7 +123,7 @@ namespace FactionColonies
 				DrawButtons(560, 40, 100, 24, 2);
 				DrawEconomicStats(687, 0, 139, 15);
 				//lowerProDucTion
-				Widgets.DrawLineHorizontal(546, 80, 422);
+				Widgets.DrawLineHorizontal(601, 80, 422);
 				DrawProductionHeaderLower(550, 80, 5);
 			}
 
@@ -166,10 +166,14 @@ namespace FactionColonies
 			Widgets.DrawHighlight(new Rect(x + 365, y + 30, 45, 40));
 			Widgets.Label(new Rect(x + 365, y + 30, 45, 40), "EstimatedProfit".Translate());
 
+			Widgets.DrawHighlight(new Rect(x + 420, y + 30, 45, 40));
+			Widgets.Label(new Rect(x + 420, y + 30, 45, 40), "TaxPercentage".Translate());
+
 
 			//Per resource
 			for (int i = 0; i < settlement.getNumberResource(); i++)
 			{
+				ResourceFC resource = settlement.returnResourceByInt(i);
 				if ((i * scrollSpacing) + scroll < 0)
 				{
 					//if outside view
@@ -186,6 +190,52 @@ namespace FactionColonies
 							disabled = true;
 							break;
 					}
+					switch (i)
+					{
+						case 0: //food
+						case 1:
+						case 2:
+						case 3:
+						case 4:
+						case 5:
+						case 8:
+							if (Widgets.ButtonImage(new Rect(x - 15, scroll + y + 65 + (i * (45 + spacing)) + 8, 20, 20), texLoad.iconCustomize))
+							{ //if click faction customize button
+								int k = i;
+								if (resource.filter == null)
+								{
+									resource.filter = new ThingFilter();
+									PaymentUtil.resetThingFilter(settlement, i);
+								}
+								List<FloatMenuOption> options = new List<FloatMenuOption>();
+								options.Add(new FloatMenuOption("Enable All", delegate { PaymentUtil.resetThingFilter(settlement, k); resource.returnLowestCost(); }));
+								options.Add(new FloatMenuOption("Disable All", delegate { resource.filter.SetDisallowAll(); resource.returnLowestCost(); }));
+								List<ThingDef> things = PaymentUtil.debugGenerateTithe(i);
+								foreach (ThingDef thing in things)
+								{
+									FloatMenuOption option;
+									if (!FactionColonies.canCraftItem(thing))
+									{
+										resource.filter.SetAllow(thing, false);
+									}
+									else
+									{
+										option = new FloatMenuOption(thing.LabelCap + " - Cost - " + thing.BaseMarketValue + " | Allowed: " + resource.filter.Allows(thing), delegate
+										{
+											resource.filter.SetAllow(thing, !resource.filter.Allows(thing));
+											resource.returnLowestCost();
+										}, thing);
+										options.Add(option);
+									}
+									
+								}
+								FloatMenu menu = new FloatMenu(options);
+								Find.WindowStack.Add(menu);
+								//Log.Message("Settlement customize clicked");
+							}
+							break;
+					}
+
 					Widgets.Checkbox(new Vector2(x + 8, scroll + y + 65 + (i * (45 + spacing)) + 8), ref settlement.returnResourceByInt(i).isTithe, 24, disabled);
 
 					if (settlement.returnResourceByInt(i).isTithe != settlement.returnResourceByInt(i).isTitheBool)
@@ -228,6 +278,10 @@ namespace FactionColonies
 
 					//Est Income
 					Widgets.Label(new Rect(x + 365, scroll + y + 70 + (i * (45 + spacing)), 45, 40), (FactionColonies.FloorStat(settlement.returnResourceByInt(i).endProduction * LoadedModManager.GetMod<FactionColoniesMod>().GetSettings<FactionColonies>().silverPerResource)));
+
+					//Tithe Percentage
+					Widgets.Label(new Rect(x + 420, scroll + y + 70 + (i * (45 + spacing)), 45, 40), FactionColonies.FloorStat(settlement.returnResourceByInt(i).taxPercentage) + "%");
+
 				}
 			}
 
@@ -257,7 +311,7 @@ namespace FactionColonies
 
 			//Draw town title
 			Text.Font = GameFont.Tiny;
-			Widgets.Label(new Rect(50, 25, 150, 20), "Hamlet".Translate()); //returnSettlement().title);
+			Widgets.Label(new Rect(50, 25, 150, 20), settlement.title); //returnSettlement().title);
 
 			//Draw town location flabor text
 			Text.Font = GameFont.Tiny;
@@ -361,6 +415,83 @@ namespace FactionColonies
 						{
 							Find.WindowStack.Add(new FCPrisonerMenu(settlement));    //put prisoner window here.
 						}
+						if (buttons[i] == "Military".Translate())
+						{
+							List<FloatMenuOption> list = new List<FloatMenuOption>();
+							list.Add(new FloatMenuOption(TranslatorFormattedStringExtensions.Translate("ToggleAutoDefend", settlement.autoDefend.ToString()), delegate { settlement.autoDefend = !settlement.autoDefend; }));
+
+							if (settlement.isUnderAttack == true)
+							{
+
+								FCEvent evt = MilitaryUtilFC.returnMilitaryEventByLocation(settlement.mapLocation);
+								
+								list.Add(new FloatMenuOption(TranslatorFormattedStringExtensions.Translate("SettlementDefendingInformation", evt.militaryForceDefending.homeSettlement.name, evt.militaryForceDefending.militaryLevel), null, MenuOptionPriority.High));
+								list.Add(new FloatMenuOption("ChangeDefendingForce".Translate(), delegate
+								{
+									List<FloatMenuOption> settlementList = new List<FloatMenuOption>();
+									SettlementFC homeSettlement = settlement;
+
+									settlementList.Add(new FloatMenuOption(TranslatorFormattedStringExtensions.Translate("ResetToHomeSettlement", homeSettlement.settlementMilitaryLevel), delegate
+									{
+										MilitaryUtilFC.changeDefendingMilitaryForce(evt, homeSettlement);
+									}, MenuOptionPriority.High));
+
+									foreach (SettlementFC settlement in Find.World.GetComponent<FactionFC>().settlements)
+									{
+										if (settlement.isMilitaryValid() == true && settlement != homeSettlement)
+										{
+													//if military is valid to use.
+
+													settlementList.Add(new FloatMenuOption(settlement.name + " " + "ShortMilitary".Translate() + " " + settlement.settlementMilitaryLevel + " - " + "FCAvailable".Translate() + ": " + (!settlement.isMilitaryBusySilent()).ToString(), delegate
+											{
+												if (settlement.isMilitaryBusy() == true)
+												{
+															//military is busy
+														}
+												else
+												{
+
+													MilitaryUtilFC.changeDefendingMilitaryForce(evt, settlement);
+
+												}
+											}, MenuOptionPriority.Default, null, null, 0f, null, null
+											));
+										}
+
+
+									}
+
+									if (settlementList.Count == 0)
+									{
+										settlementList.Add(new FloatMenuOption("NoValidMilitaries".Translate(), null));
+									}
+
+									FloatMenu floatMenu2 = new FloatMenu(settlementList);
+									floatMenu2.vanishIfMouseDistant = true;
+									Find.WindowStack.Add(floatMenu2);
+
+
+											//set to raid settlement here
+										}));
+
+
+
+
+								FloatMenu floatMenu = new FloatMenu(list);
+								floatMenu.vanishIfMouseDistant = true;
+								Find.WindowStack.Add(floatMenu);
+							} else
+							{
+								
+								
+								list.Add(new FloatMenuOption("SettlementNotBeingAttacked".Translate(), null));
+								FloatMenu menu = new FloatMenu(list);
+								Find.WindowStack.Add(menu);
+
+							}
+
+						}
+
 
 					}
 				}

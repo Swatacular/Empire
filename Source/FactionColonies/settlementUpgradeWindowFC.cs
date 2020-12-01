@@ -115,6 +115,7 @@ namespace FactionColonies
 							FCEvent tmp = new FCEvent(true);
 							tmp.def = FCEventDefOf.upgradeSettlement;
 							tmp.location = settlement.mapLocation;
+							tmp.planetName = settlement.planetName;
 							tmp.timeTillTrigger = Find.TickManager.TicksGame + (settlement.settlementLevel + 1)*60000*2;
 							//Log.Message(list[i].enactDuration.ToString());
 							//Log.Message(tmp.timeTillTrigger.ToString());

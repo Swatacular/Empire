@@ -14,7 +14,7 @@ namespace FactionColonies
         {
         }
 
-        public ResourceFC(string name, string label, double baseProduction)
+        public ResourceFC(string name, string label, double baseProduction, SettlementFC settlement = null, int i = -1)
         {
             this.name = name;
             this.label = label;
@@ -24,8 +24,41 @@ namespace FactionColonies
             this.baseProductionMultiplier = 1;
             this.baseProductionAdditives.Add(new ProductionAdditive("", 0, ""));
             this.baseProductionMultipliers.Add(new ProductionMultiplier("", 0, ""));
+            this.settlement = settlement;
+            this.filter = new ThingFilter();
+            if (settlement != null)
+            {
+                PaymentUtil.resetThingFilter(settlement, i);
+            }
+        }
+        
+        public bool checkMinimum()
+        {
+            if (taxStock >= taxMinimumToTithe)
+            {
+                return true;
+            } else
+            {
+                return false;
+            }
+        }
+        public double returnTaxPercentage()
+        {
+            taxPercentage = Math.Round(taxStock / taxMinimumToTithe, 2)*100 ;
+            return taxPercentage;
         }
 
+        public double returnLowestCost()
+        {
+            double minimum = 999999;
+            foreach (ThingDef thing in filter.AllowedThingDefs) 
+            {
+                minimum = Math.Min(thing.BaseMarketValue, minimum);
+            }
+            //Log.Message(minimum.ToString());
+            taxMinimumToTithe = minimum + (double)LoadedModManager.GetMod<FactionColoniesMod>().GetSettings<FactionColonies>().productionTitheMod + traitUtilsFC.cycleTraits(0.0, "taxBaseRandomModifier", Find.World.GetComponent<FactionFC>().traits, "add") + traitUtilsFC.cycleTraits(0.0, "taxBaseRandomModifier", settlement.traits, "add");
+            return minimum;
+        }
 
         public Texture2D getIcon()
         {
@@ -56,6 +89,14 @@ namespace FactionColonies
             Scribe_Values.Look<bool>(ref isTithe, "isTithe");
             Scribe_Values.Look<bool>(ref isTitheBool, "isTitheBool");
             Scribe_Values.Look<int>(ref assignedWorkers, "assignedWorkers");
+
+            Scribe_Deep.Look<ThingFilter>(ref filter, "filter");
+            //Tax Stock
+            Scribe_Values.Look<double>(ref taxStock, "taxStock");
+            Scribe_Values.Look<double>(ref taxMinimumToTithe, "taxMinimumToTithe");
+            Scribe_Values.Look<double>(ref taxPercentage, "taxPercentage");
+
+            Scribe_References.Look<SettlementFC>(ref settlement, "settlement");
         }
 
         public string name;
@@ -70,6 +111,12 @@ namespace FactionColonies
         public int assignedWorkers = 0;
         public bool isTithe = false;
         public bool isTitheBool = false; //used to track if isTithe is changed. AGHHH
+
+        public ThingFilter filter = new ThingFilter();
+        public double taxStock = 0;
+        public double taxMinimumToTithe = 99999;
+        public double taxPercentage = 0;
+        public SettlementFC settlement;
 
     }
 

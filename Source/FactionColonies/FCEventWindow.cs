@@ -168,7 +168,7 @@ namespace FactionColonies
                 {
                     if(evt.hasDestination == true)
                     {
-                        Find.WindowStack.Add(new settlementWindowFC(faction.returnSettlementByLocation(evt.location)));
+                        Find.WindowStack.Add(new settlementWindowFC(faction.returnSettlementByLocation(evt.location, evt.planetName)));
                     } else
                     {
                         if (evt.settlementTraitLocations.Count() > 0)
@@ -189,7 +189,7 @@ namespace FactionColonies
                         {
                            if (evt.def == FCEventDefOf.taxColony && evt.source != -1)
                             {
-                                Find.WindowStack.Add(new settlementWindowFC(faction.returnSettlementByLocation(evt.source)));
+                                Find.WindowStack.Add(new settlementWindowFC(faction.returnSettlementByLocation(evt.source, evt.planetName)));
                             }
                         }
                     }

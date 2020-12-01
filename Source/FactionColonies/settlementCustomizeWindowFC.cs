@@ -68,7 +68,8 @@ namespace FactionColonies
 			base.OnAcceptKeyPressed();
 			//faction.title = title;
 			settlement.name = name;
-			Find.WorldObjects.SettlementAt(settlement.mapLocation).Name = name;
+			if (Find.WorldObjects.SettlementAt(settlement.mapLocation) != null)
+				Find.WorldObjects.SettlementAt(settlement.mapLocation).Name = name;
 
 		}
 
@@ -120,7 +121,11 @@ namespace FactionColonies
 			if (Widgets.ButtonText(new Rect((InitialSize.x - 120 - 18) / 2, yoffset + InitialSize.y - 120, 120, 30), "ConfirmChanges".Translate()))
 			{
 				settlement.name = name;
-				Find.WorldObjects.SettlementAt(settlement.mapLocation).Name = name;
+				Settlement check = Find.WorldObjects.SettlementAt(settlement.mapLocation);
+				if (check != null)
+				{
+					check.Name = name;
+				}
 			}
 
 			//settlement buttons

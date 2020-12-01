@@ -91,6 +91,7 @@ namespace FactionColonies
                                 FCEvent tmpEvt = new FCEvent(true);
                                 tmpEvt.def = FCEventDefOf.constructBuilding;
                                 tmpEvt.source = settlement.mapLocation;
+                                tmpEvt.planetName = settlement.planetName;
                                 tmpEvt.building = building;
                                 tmpEvt.buildingSlot = buildingSlot;
                                 tmpEvt.timeTillTrigger = Find.TickManager.TicksGame + building.constructionDuration;

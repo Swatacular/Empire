@@ -37,6 +37,7 @@ namespace FactionColonies
             }
         }
 
+
         protected override void SetInitialSizeAndPosition()
         {
             this.windowRect = new Rect((float)UI.screenWidth - this.InitialSize.x, 0f, this.InitialSize.x, this.InitialSize.y);
@@ -44,7 +45,8 @@ namespace FactionColonies
 
         public override void DoWindowContents(Rect rect) 
         {
-            if(Find.World.GetComponent<FactionFC>().militaryCustomizationUtil.DeployedSquads.Count() == 0)
+            FactionFC faction = Find.World.GetComponent<FactionFC>();
+            if(faction.militaryCustomizationUtil.DeployedSquads.Count() == 0)
             {
                 this.Close();
             }
@@ -72,12 +74,15 @@ namespace FactionColonies
             if(Widgets.ButtonText(selectSquad, squadText))
             {
                 List<FloatMenuOption> list = new List<FloatMenuOption>();
-                foreach (MercenarySquadFC squad in Find.World.GetComponent<FactionFC>().militaryCustomizationUtil.DeployedSquads)
+                foreach (MercenarySquadFC squad in faction.militaryCustomizationUtil.DeployedSquads)
                 {
-                    list.Add(new FloatMenuOption(squad.getSettlement.name + "'s " + squad.outfit.name, delegate
+                    if (squad.getSettlement != null)
                     {
-                        selectedSquad = squad;
-                    }));
+                        list.Add(new FloatMenuOption(squad.getSettlement.name + "'s " + squad.outfit.name, delegate
+                        {
+                            selectedSquad = squad;
+                        }));
+                    }
                 }
                 if (list.Count() == 0)
                 {
@@ -122,7 +127,7 @@ namespace FactionColonies
                 if (selectedSquad != null)
                 {
                     Messages.Message(selectedSquad.outfit.name + " are now leaving the map.", MessageTypeDefOf.NeutralEvent);
-                    selectedSquad.order = MilitaryOrders.RecoverWounded;
+                    selectedSquad.order = MilitaryOrders.Leave;
                 }
             }
 
